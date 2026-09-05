@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { Heart } from "lucide-react";
+import { Heart, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router";
 
@@ -17,18 +17,25 @@ export type ProductCardProduct = {
   materials: string[];
   madeToOrder: boolean;
   stock: number;
-  maker?: { shopName: string; location?: string } | null;
+  maker?: { _id: string; shopName: string; location?: string } | null;
 };
 
 type Props = {
   product: ProductCardProduct;
   favorited?: boolean;
   onToggleFavorite?: (productId: string) => void;
+  onAddToCart?: (productId: string) => void;
   index?: number;
 };
 
 /** Product tile used across shop, landing, favorites. */
-export function ProductCard({ product, favorited, onToggleFavorite, index = 0 }: Props) {
+export function ProductCard({
+  product,
+  favorited,
+  onToggleFavorite,
+  onAddToCart,
+  index = 0,
+}: Props) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -95,6 +102,17 @@ export function ProductCard({ product, favorited, onToggleFavorite, index = 0 }:
               </span>
             )}
           </div>
+          {onAddToCart && product.stock > 0 && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="mt-2 w-full gap-1.5 rounded-full"
+              onClick={() => onAddToCart(product._id)}
+            >
+              <Plus className="size-3.5" />
+              Add to bag
+            </Button>
+          )}
         </CardContent>
       </Card>
     </motion.div>

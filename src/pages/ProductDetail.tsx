@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import type { Id } from "@/convex/_generated/dataModel";
 
 type DetailProduct = ProductCardProduct & {
   maker: {
@@ -42,10 +43,10 @@ export default function ProductDetail() {
 
   const product = useQuery(
     api.shop.getProduct,
-    id ? { id } : "skip",
+    id ? { id: id as Id<"products"> } : "skip",
   ) as DetailProduct | null | undefined;
 
-  const makerId = product?.maker?._id;
+  const makerId = product?.maker?._id as Id<"makers"> | undefined;
   const makerShop = useQuery(
     api.shop.getMaker,
     makerId ? { id: makerId } : "skip",
@@ -56,7 +57,10 @@ export default function ProductDetail() {
     isAuthenticated ? {} : "skip",
   );
   const favorited = useMemo(
-    () => new Set((favorites ?? []).map((f) => f.productId)).has(id ?? ""),
+    () =>
+      new Set<string>((favorites ?? []).map((f) => f.productId as string)).has(
+        id ?? "",
+      ),
     [favorites, id],
   );
 
@@ -69,7 +73,7 @@ export default function ProductDetail() {
       toast.error("Sign in to save favorites.");
       return;
     }
-    toggleFavorite({ productId: id })
+    toggleFavorite({ productId: id as Id<"products"> })
       .then((now) =>
         toast.success(now ? "Saved to favorites" : "Removed from favorites"),
       )
@@ -82,7 +86,7 @@ export default function ProductDetail() {
       navigate(`/auth?returnTo=${encodeURIComponent(`/product/${id}`)}`);
       return;
     }
-    addToCart({ productId: id, quantity })
+    addToCart({ productId: id as Id<"products">, quantity })
       .then(() => toast.success("Added to your bag"))
       .catch((err: Error) => toast.error(err.message));
   };

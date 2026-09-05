@@ -7,7 +7,6 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { ProductCard, type ProductCardProduct } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/hooks/use-auth";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -36,7 +35,7 @@ function Hero() {
         className="absolute inset-0 -z-10"
         style={{
           backgroundImage:
-            "url(https://images.unsplash.com/photo-1459908676235-d5f02a50144b?w=1600&q=70)",
+            "url(https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1600&q=70)",
         }}
       />
       <div
@@ -375,15 +374,14 @@ function CommunityStrip() {
 }
 
 export default function Landing() {
-  const { isAuthenticated } = useAuth();
   const ensureSeeded = useMutation(api.bootstrap.ensureSeeded);
   const [seeded, setSeeded] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated || seeded) return;
+    if (seeded) return;
     setSeeded(true);
     ensureSeeded().catch(() => undefined);
-  }, [isAuthenticated, seeded, ensureSeeded]);
+  }, [seeded, ensureSeeded]);
 
   return (
     <div className="min-h-screen bg-background">

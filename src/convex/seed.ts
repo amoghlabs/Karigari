@@ -68,7 +68,7 @@ const seed: SeedMaker[] = [
         category: "Ceramics",
         price: 64,
         imageUrl:
-          "https://images.unsplash.com/photo-1602748828300-6c35f2e2d3c1?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1487700160041-babef9c3cb55?w=800&h=800&fit=crop",
         materials: ["Stoneware", "Wood-ash glazes"],
         madeToOrder: true,
         stock: 9,
@@ -95,7 +95,7 @@ const seed: SeedMaker[] = [
         category: "Textiles",
         price: 210,
         imageUrl:
-          "https://images.unsplash.com/photo-1580301762395-83604735c1e0?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=800&h=800&fit=crop",
         materials: ["Vermont wool", "Natural indigo"],
         madeToOrder: true,
         stock: 4,

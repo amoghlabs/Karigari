@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ProductCard, type ProductCardProduct } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
+import type { Id } from "@/convex/_generated/dataModel";
 import { MapPin, Package, Store } from "lucide-react";
 import { Link } from "react-router";
 
@@ -13,8 +14,20 @@ export default function MakerStorefront() {
 
   const maker = useQuery(
     api.shop.getMaker,
-    id ? { id } : "skip",
-  ) as (ProductCardProduct & { products: ProductCardProduct[] }) | null | undefined;
+    id ? { id: id as Id<"makers"> } : "skip",
+  ) as
+    | (ProductCardProduct & {
+        products: ProductCardProduct[];
+        shopName: string;
+        location: string;
+        craft: string;
+        bio: string;
+        story: string;
+        image?: string;
+        coverImage?: string;
+      })
+    | null
+    | undefined;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">

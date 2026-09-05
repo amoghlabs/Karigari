@@ -30,9 +30,6 @@ export default function Orders() {
   const orders = useQuery(api.orders.listMyOrders);
 
   const ordered = orders ?? [];
-  const sorted = [...ordered].sort(
-    (a, b) => Number(b._id === justPlaced) - Number(a._id === justPlaced) || 0,
-  );
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -84,7 +81,7 @@ export default function Orders() {
         )}
 
         <div className="mt-8 space-y-5">
-          {sorted.map((order) => {
+          {ordered.map((order) => {
             const meta = STATUS_META[order.status];
             const StatusIcon = meta.icon;
             return (

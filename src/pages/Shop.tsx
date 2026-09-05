@@ -16,6 +16,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import { PRODUCT_CATEGORIES } from "@/lib/categories";
+import type { Id } from "@/convex/_generated/dataModel";
 import { Search, SlidersHorizontal, Store } from "lucide-react";
 import { toast } from "sonner";
 
@@ -40,7 +41,7 @@ export default function Shop() {
     isAuthenticated ? {} : "skip",
   );
   const favoriteIds = useMemo(
-    () => new Set((favorites ?? []).map((f) => f.productId)),
+    () => new Set<string>((favorites ?? []).map((f) => f.productId as string)),
     [favorites],
   );
 
@@ -52,7 +53,7 @@ export default function Shop() {
       toast.error("Sign in to save favorites.");
       return;
     }
-    toggleFavorite({ productId })
+    toggleFavorite({ productId: productId as Id<"products"> })
       .then((nowFavorited) =>
         toast.success(nowFavorited ? "Saved to favorites" : "Removed from favorites"),
       )
@@ -64,7 +65,7 @@ export default function Shop() {
       toast.error("Sign in to add pieces to your bag.");
       return;
     }
-    addToCart({ productId })
+    addToCart({ productId: productId as Id<"products"> })
       .then(() => toast.success("Added to your bag"))
       .catch((err: Error) => toast.error(err.message));
   };
@@ -136,6 +137,7 @@ export default function Shop() {
               product={product}
               favorited={favoriteIds.has(product._id)}
               onToggleFavorite={handleToggleFavorite}
+              onAddToCart={handleAddToCart}
               index={i}
             />
           ))}

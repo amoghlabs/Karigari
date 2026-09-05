@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { ProductCard, type ProductCardProduct } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
+import type { Id } from "@/convex/_generated/dataModel";
 import { ArrowRight, Heart } from "lucide-react";
 import { toast } from "sonner";
 
@@ -27,14 +28,14 @@ export default function Favorites() {
     isAuthenticated ? {} : "skip",
   );
   const favoriteIds = useMemo(
-    () => new Set((favorites ?? []).map((f) => f.productId)),
+    () => new Set<string>((favorites ?? []).map((f) => f.productId as string)),
     [favorites],
   );
 
   const toggleFavorite = useMutation(api.favorites.toggleFavorite);
 
   const handleToggleFavorite = (productId: string) => {
-    toggleFavorite({ productId })
+    toggleFavorite({ productId: productId as Id<"products"> })
       .then((now) =>
         toast.success(now ? "Saved to favorites" : "Removed from favorites"),
       )
