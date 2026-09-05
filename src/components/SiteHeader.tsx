@@ -1,5 +1,4 @@
 import { useAuth } from "@/hooks/use-auth";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -85,10 +84,9 @@ export function SiteHeader({ transparent = false }: { transparent?: boolean }) {
           >
             <ShoppingBag className="size-[18px]" />
             {cartCount > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex size-4.5 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
+              <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
                 {cartCount > 9 ? "9+" : cartCount}
               </span>
-              <Badge className="hidden" />
             )}
           </Button>
 
@@ -101,7 +99,7 @@ export function SiteHeader({ transparent = false }: { transparent?: boolean }) {
                   </span>
                   <span className="hidden sm:inline">Account</span>
                 </Button>
-              </DropdownMenuSiteHeaderGuard>
+              </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-52">
                 <DropdownMenuLabel className="text-xs text-muted-foreground">
                   {user?.name || user?.email || "Signed in"}

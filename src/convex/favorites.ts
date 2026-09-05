@@ -15,6 +15,29 @@ export const listFavorites = query({
   },
 });
 
+/** The favorited products (joined) for the signed-in user. */
+export const listFavoriteProducts = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) return [];
+
+    const favs = await ctx.db
+      .query("favorites")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect();
+
+    return Promise.all(
+      favs.map(async (fav) => {
+        const product = await ctx.db.get(fav.productId);
+        if (!product) return null;
+        const maker = await ctx.db.get(product.makerId);
+        return { ...product, maker };
+      }),
+    ).then((rows) => rows.filter((row): row is NonNullable<typeof row> => row !== null));
+  },
+});
+
 /** Toggle a favorite; returns whether it is now favorited. */
 export const toggleFavorite = mutation({
   args: { productId: v.id("products") },

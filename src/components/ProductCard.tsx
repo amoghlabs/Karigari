@@ -1,0 +1,102 @@
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { formatPrice } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import { Heart } from "lucide-react";
+import { motion } from "framer-motion";
+import { Link } from "react-router";
+
+export type ProductCardProduct = {
+  _id: string;
+  title: string;
+  description: string;
+  category: string;
+  price: number;
+  imageUrl: string;
+  materials: string[];
+  madeToOrder: boolean;
+  stock: number;
+  maker?: { shopName: string; location?: string } | null;
+};
+
+type Props = {
+  product: ProductCardProduct;
+  favorited?: boolean;
+  onToggleFavorite?: (productId: string) => void;
+  index?: number;
+};
+
+/** Product tile used across shop, landing, favorites. */
+export function ProductCard({ product, favorited, onToggleFavorite, index = 0 }: Props) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay: Math.min(index * 0.04, 0.3) }}
+    >
+      <Card className="group h-full gap-0 overflow-hidden border-border/70 bg-card py-0 shadow-soft transition-shadow duration-300 hover:shadow-soft-lg">
+        <div className="relative overflow-hidden">
+          <Link to={`/product/${product._id}`} className="block">
+            <img
+              src={product.imageUrl}
+              alt={product.title}
+              loading="lazy"
+              className="aspect-square w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+            />
+          </Link>
+          {onToggleFavorite && (
+            <button
+              type="button"
+              aria-label={favorited ? "Remove from favorites" : "Add to favorites"}
+              onClick={(e) => {
+                e.preventDefault();
+                onToggleFavorite(product._id);
+              }}
+              className={cn(
+                "absolute right-3 top-3 flex size-8 items-center justify-center rounded-full border border-border/60 bg-background/90 backdrop-blur transition-all hover:scale-110",
+                favorited ? "text-primary" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <Heart className={cn("size-4", favorited && "fill-current")} />
+            </button>
+          )}
+          {product.madeToOrder && (
+            <Badge className="absolute left-3 top-3 bg-background/90 text-foreground backdrop-blur">
+              Made to order
+            </Badge>
+          )}
+        </div>
+        <CardContent className="flex flex-1 flex-col gap-1.5 p-4">
+          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+            {product.category}
+          </p>
+          <Link
+            to={`/product/${product._id}`}
+            className="font-display text-[17px] font-semibold leading-snug tracking-tight hover:text-primary transition-colors"
+          >
+            {product.title}
+          </Link>
+          {product.maker && (
+            <Link
+              to={`/maker/${product.maker._id}`}
+              className="w-fit text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+            >
+              by {product.maker.shopName}
+            </Link>
+          )}
+          <div className="mt-auto flex items-center justify-between pt-2">
+            <span className="font-display text-lg font-semibold">
+              {formatPrice(product.price)}
+            </span>
+            {product.stock <= 3 && (
+              <span className="text-xs font-medium text-primary">
+                {product.stock === 0 ? "Sold out" : `Only ${product.stock} left`}
+              </span>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
