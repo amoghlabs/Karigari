@@ -25,12 +25,12 @@ type SeedMaker = {
 
 const seed: SeedMaker[] = [
   {
-    shopName: "Kiln & Ember",
-    bio: "Wheel-thrown stoneware fired in a wood kiln in the hills outside Asheville.",
-    location: "Asheville, NC",
-    craft: "Ceramics",
+    shopName: "Mitti Kala",
+    bio: "Wheel-thrown clay and Jaipur blue pottery from a family studio in the Pink City.",
+    location: "Jaipur, Rajasthan",
+    craft: "Pottery & Terracotta",
     story:
-      "Every mug, bowl, and vase leaves our studio thrown by hand, trimmed by hand, and glazed with ash from our own kiln. We believe objects for daily ritual should carry the mark of the person who made them — a thumbprint in the glaze, a slightly asymmetric rim. Nothing here is perfect. Everything is made.",
+      "Three generations of our family have worked the same wheel in the same courtyard. The clay comes from the beds of the Banganga river, sieved, wedged and thrown by hand. Our blue pottery follows the old Jaipur recipe — quartz, multani mitti and gum — painted with cobalt and finished after a slow wood firing. Every pot that leaves here has been turned, dried, burned and checked by hand.",
     image:
       "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&crop=faces",
     coverImage:
@@ -38,50 +38,50 @@ const seed: SeedMaker[] = [
     isFeatured: true,
     products: [
       {
-        title: "Ember Speckled Mug",
+        title: "Jaipur Blue Pottery Vase",
         description:
-          "A 12oz wheel-thrown mug with a satin ash glaze that pools deep amber where the clay breaks. The handle is pulled by hand and fits a full hand — the kind you reach for every morning.",
-        category: "Ceramics",
-        price: 42,
+          "A hand-thrown vase painted in traditional cobalt on white — the classic Jaipur blue pottery recipe of quartz, clay and gum. Fired slowly by wood, it holds flowers or simply holds the light of a room.",
+        category: "Pottery & Terracotta",
+        price: 1850,
         imageUrl:
-          "https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=800&h=800&fit=crop",
-        materials: ["Stoneware clay", "Wood-ash glaze"],
+          "https://images.unsplash.com/photo-1487700160041-babef9c3cb55?w=800&h=800&fit=crop",
+        materials: ["Quartz & clay", "Cobalt paint", "Wood firing"],
         madeToOrder: true,
-        stock: 14,
-      },
-      {
-        title: "Riverstone Serving Bowl",
-        description:
-          "A generous wide bowl with an unglazed exterior that keeps the raw texture of the river clay. Finished inside with a food-safe satin white. Ideal for pasta night or a counter of fruit.",
-        category: "Ceramics",
-        price: 88,
-        imageUrl:
-          "https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=800&h=800&fit=crop",
-        materials: ["River clay", "Food-safe glaze"],
-        madeToOrder: false,
         stock: 6,
       },
       {
-        title: "Ash-Glaze Bud Vase Trio",
+        title: "Terracotta Diya Set of 6",
         description:
-          "Three small vases, three different ash glazes from a single firing. Each one holds a stem or two — meant for the windowsill, the desk, the corner of the bath.",
-        category: "Ceramics",
-        price: 64,
+          "Six hand-pressed terracotta diyas, unglazed on the outside and oiled inside, ready for the evening aarti. Each one is pressed, smoothed and sun-dried before firing.",
+        category: "Pottery & Terracotta",
+        price: 950,
         imageUrl:
-          "https://images.unsplash.com/photo-1487700160041-babef9c3cb55?w=800&h=800&fit=crop",
-        materials: ["Stoneware", "Wood-ash glazes"],
+          "https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=800&h=800&fit=crop",
+        materials: ["River clay", "Mustard oil finish"],
+        madeToOrder: false,
+        stock: 40,
+      },
+      {
+        title: "Mati Surahi (Water Pitcher)",
+        description:
+          "A clay surahi that keeps water naturally cool, thrown in one piece and finished with a hand-painted folk pattern. The porous clay does the work — no electricity needed.",
+        category: "Pottery & Terracotta",
+        price: 1450,
+        imageUrl:
+          "https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=800&h=800&fit=crop",
+        materials: ["Banganaga river clay", "Natural slip paint"],
         madeToOrder: true,
-        stock: 9,
+        stock: 8,
       },
     ],
   },
   {
-    shopName: "Loomstead",
-    bio: "Handwoven textiles and naturally dyed goods from a one-woman studio in Vermont.",
-    location: "Brattleboro, VT",
-    craft: "Textiles",
+    shopName: "Varanasi Vastra",
+    bio: "Handloom silk and cotton from the old weaving quarters of Banaras.",
+    location: "Varanasi, Uttar Pradesh",
+    craft: "Handloom Textiles",
     story:
-      "I weave on a 100-year-old floor loom in a barn that smells like cedar and sheep. Wool and flax come from farms I can drive to, and every dye bath is made from indigo, madder root, or oak galls. Textiles should soften a room the way an old sweater softens over years — that is what I make.",
+      "The loom in our house is older than anyone can remember. We weave the way Banaras has always woven — silk and cotton threaded by hand, the weft beaten with a wooden comb until the cloth is firm and heavy. A single dupatta can take four days of sitting at the loom. We sell directly, so the price you pay is the price the weaver asked — nothing added in between.",
     image:
       "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=200&h=200&fit=crop&crop=faces",
     coverImage:
@@ -89,222 +89,332 @@ const seed: SeedMaker[] = [
     isFeatured: true,
     products: [
       {
-        title: "Indigo Wool Throw",
+        title: "Banarasi Silk Dupatta",
         description:
-          "A generously sized lap throw woven from undyed Vermont wool and overdyed in a living indigo vat. Heavy enough for winter reading, breathable enough for cool summer porches.",
-        category: "Textiles",
-        price: 210,
-        imageUrl:
-          "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=800&h=800&fit=crop",
-        materials: ["Vermont wool", "Natural indigo"],
-        madeToOrder: true,
-        stock: 4,
-      },
-      {
-        title: "Linen Kitchen Towels, Set of 2",
-        description:
-          "Woven from European flax and finished with hand-hemmed edges. They start crisp and only get softer. The stripe pattern repeats subtly — no two towels identical.",
-        category: "Textiles",
-        price: 58,
-        imageUrl:
-          "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=800&fit=crop",
-        materials: ["European linen"],
-        madeToOrder: false,
-        stock: 18,
-      },
-      {
-        title: "Madder-Dyed Table Runner",
-        description:
-          "A long runner dyed with madder root to a dusty brick red, woven with a subtle undulating twill. Machine washable, made for actual dinners — not just the photograph.",
-        category: "Textiles",
-        price: 96,
+          "A handloom dupatta in pure Banarasi silk with a woven buti border — heavy enough to drape beautifully, light enough for daily wear. Threaded and woven entirely by hand in our family workshop.",
+        category: "Handloom Textiles",
+        price: 3200,
         imageUrl:
           "https://images.unsplash.com/photo-1533090161767-e6ffed986c88?w=800&h=800&fit=crop",
-        materials: ["Cotton-linen blend", "Madder root dye"],
-        madeToOrder: true,
-        stock: 7,
-      },
-    ],
-  },
-  {
-    shopName: "Grainline Wood Co.",
-    bio: "Furniture and kitchen goods in walnut and white oak, joinery over shortcuts.",
-    location: "Portland, OR",
-    craft: "Woodwork",
-    story:
-      "Two of us in a shared shop, working lumber milled from urban-fallen trees. We cut every joint ourselves — no biscuits, no pocket screws — because a mortise-and-tenon will still be tight in fifty years. Boards keep their live edges when the tree offers a good one.",
-    image:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=faces",
-    coverImage:
-      "https://images.unsplash.com/photo-1416339306562-f3d12fefd36f?w=1200&h=500&fit=crop",
-    isFeatured: true,
-    products: [
-      {
-        title: "Walnut End-Grain Board",
-        description:
-          "An end-grain cutting board in black walnut, glued in a checker of heartwood and sapwood. End grain is gentle on knives and self-heals; oil it once a month and it will outlive the trend cycle.",
-        category: "Woodwork",
-        price: 135,
-        imageUrl:
-          "https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=800&h=800&fit=crop",
-        materials: ["Black walnut", "Food-safe oil & wax"],
-        madeToOrder: true,
-        stock: 8,
-      },
-      {
-        title: "White Oak Stool",
-        description:
-          "A three-legged stool with hand-cut wedge tenons, finished in hardwax oil. Equally at home as a plant stand, a nightstand, or a seat by the door.",
-        category: "Woodwork",
-        price: 240,
-        imageUrl:
-          "https://images.unsplash.com/photo-1532372320572-cda25653a26d?w=800&h=800&fit=crop",
-        materials: ["White oak", "Hardwax oil"],
+        materials: ["Banarasi silk", "Handloom weave"],
         madeToOrder: true,
         stock: 5,
       },
       {
-        title: "Serving Paddle in Cherry",
+        title: "Chanderi Cotton Saree",
         description:
-          "A slim serving paddle with a hand-carved handle groove, in cherry that deepens to a warm russet with use. For cheese, bread, or moving a roast to the table.",
-        category: "Woodwork",
-        price: 72,
+          "A soft Chanderi saree in fine hand-spun cotton with a woven zari border. Cool in summer, elegant in winter — woven slowly so the cloth breathes.",
+        category: "Handloom Textiles",
+        price: 5800,
         imageUrl:
-          "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800&h=800&fit=crop",
-        materials: ["Cherry", "Food-safe finish"],
+          "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=800&fit=crop",
+        materials: ["Hand-spun cotton", "Zari border"],
+        madeToOrder: true,
+        stock: 3,
+      },
+      {
+        title: "Tussar Silk Stole",
+        description:
+          "A natural tussar stole in undyed golden silk, woven on the handloom with hand-knotted fringes. The slight slubs are the signature of real tussar — no two stoles alike.",
+        category: "Handloom Textiles",
+        price: 2600,
+        imageUrl:
+          "https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=800&h=800&fit=crop",
+        materials: ["Tussar silk", "Hand-knotted fringe"],
         madeToOrder: false,
         stock: 12,
       },
     ],
   },
   {
-    shopName: "Small Anvil",
-    bio: "Recycled-gold jewelry cast and finished by hand, one piece at a time.",
-    location: "Providence, RI",
-    craft: "Jewelry",
+    shopName: "Ajrakh House",
+    bio: "Hand block-printed fabric in natural indigo and madder, from the Kutch desert.",
+    location: "Bhuj, Gujarat",
+    craft: "Block Printing",
     story:
-      "I trained as a silversmith and now work exclusively in recycled gold and responsibly sourced stones. Every ring is carved in wax, cast in small batches, and set under a microscope. Made for hands that actually use them — I wear my own samples daily so the prototypes earn their place.",
+      "Block printing came to our family from Sindh three generations ago. Every cloth is printed with hand-carved teak blocks: the resist painted by hand, the indigo vat dipped again and again, the madder boiled for colour. One ajrakh cloth passes through fourteen stages and fourteen hands. We keep the old designs — the stars, the borders, the river patterns — because they carry meaning older than any one printer.",
     image:
       "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=faces",
+    coverImage:
+      "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=1200&h=500&fit=crop",
+    isFeatured: true,
+    products: [
+      {
+        title: "Ajrakh Block-Printed Throw",
+        description:
+          "A cotton throw printed with traditional ajrakh borders — natural indigo, madder red and black — using hand-carved blocks and a living indigo vat. Each print is pressed by hand, so no two are identical.",
+        category: "Block Printing",
+        price: 3900,
+        imageUrl:
+          "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?w=800&h=800&fit=crop",
+        materials: ["Washed cotton", "Natural indigo & madder"],
+        madeToOrder: true,
+        stock: 4,
+      },
+      {
+        title: "Sanganeri Print Cushion Covers (Set of 2)",
+        description:
+          "Two cotton cushion covers printed with fine Sanganeri floral blocks in indigo and mustard. The cloth is washed and softened before printing, so it is ready for the sofa the day it arrives.",
+        category: "Block Printing",
+        price: 1400,
+        imageUrl:
+          "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=800&h=800&fit=crop",
+        materials: ["Cotton", "Hand-carved teak blocks"],
+        madeToOrder: false,
+        stock: 15,
+      },
+      {
+        title: "Indigo Dabu Table Runner",
+        description:
+          "A hand-printed runner with dabu mud-resist circles, dipped in indigo until the pattern holds. Dabu is a slow craft — each cloth is reserved, dyed and rinsed up to eight times.",
+        category: "Block Printing",
+        price: 1800,
+        imageUrl:
+          "https://images.unsplash.com/photo-1596464716127-f2a82984de30?w=800&h=800&fit=crop",
+        materials: ["Cotton", "Indigo & mud resist"],
+        madeToOrder: true,
+        stock: 7,
+      },
+    ],
+  },
+  {
+    shopName: "Kundan Kala",
+    bio: "Kundan, meenakari and thewa jewellery set by hand in the Jaipur tradition.",
+    location: "Jaipur, Rajasthan",
+    craft: "Jewelry",
+    story:
+      "Our family has set jewellery in the Jaipur karkhana style for four generations — pure gold and silver, stones set in kundan rather than prongs, enamel added in the meenakari tradition. Nothing is machine-cast. Each piece is built up bead by bead, checked under the loupe, and worn proudly by the people of this city before it is ever sold to anyone else.",
+    image:
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=faces",
     coverImage:
       "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1200&h=500&fit=crop",
     isFeatured: false,
     products: [
       {
-        title: "Molten Signet Ring",
+        title: "Kundan Choker Set",
         description:
-          "A signet with an organic, barely-melted face that catches light like water. Cast in recycled 14k gold, sized on request. The inside face is left soft so it seats to your finger over time.",
+          "A hand-set kundan choker with matching earrings — stones seated in gold foil the traditional way, finished with a soft red enamel back. Made to order, sized on request.",
         category: "Jewelry",
-        price: 380,
+        price: 6500,
         imageUrl:
           "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&h=800&fit=crop",
-        materials: ["Recycled 14k gold"],
+        materials: ["22k gold foil", "Kundan stones", "Meenakari enamel"],
         madeToOrder: true,
         stock: 3,
       },
       {
-        title: "Seam Studs",
+        title: "Meenakari Jhumkas",
         description:
-          "Tiny studs with a visible seam of texture down the front — a nod to the wax models they were carved from. Sterling silver or 14k gold fill.",
+          "Lightweight jhumkas with hand-painted meenakari enamel in the front and a traditional dome back. Comfortable for daily wear, ornate enough for festivals.",
         category: "Jewelry",
-        price: 95,
+        price: 2200,
         imageUrl:
           "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&h=800&fit=crop",
-        materials: ["Sterling silver", "14k gold fill"],
+        materials: ["Sterling silver", "Enamel work"],
         madeToOrder: false,
-        stock: 20,
+        stock: 10,
+      },
+      {
+        title: "Thewa Pendant",
+        description:
+          "A thewa pendant — 23k gold sheet worked over coloured glass in the old Pratapgarh style, depicting a hunting scene. A vanishing craft, made entirely by hand.",
+        category: "Jewelry",
+        price: 4800,
+        imageUrl:
+          "https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=800&h=800&fit=crop",
+        materials: ["23k gold sheet", "Coloured glass"],
+        madeToOrder: true,
+        stock: 4,
       },
     ],
   },
   {
-    shopName: "Hide & Hem",
-    bio: "Vegetable-tanned leather goods stitched by saddle process in small batches.",
-    location: "Austin, TX",
-    craft: "Leather",
+    shopName: "Sahariya Woodcraft",
+    bio: "Hand-carved wood from the forest craftspeople of Bundelkhand.",
+    location: "Chhatarpur, Madhya Pradesh",
+    craft: "Woodwork",
     story:
-      "I buy hides from a tannery in Pennsylvania, cut every panel by hand, and saddle-stitch with linen thread — two needles, one seam, no machine. Leather goods are supposed to get better looking as they absorb your life. I make the things you pass down.",
+      "We are Sahariya carvers — the forest people of Bundelkhand. Our wood is seasoned teak and mango, cut by hand and carved with tools older than the town. Nothing is sanded to a factory shine; you can see the chisel's path in every curve. A bowl we carve today will be oiled, used, and still in a kitchen fifty years from now.",
     image:
       "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&h=200&fit=crop&crop=faces",
     coverImage:
-      "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=1200&h=500&fit=crop",
+      "https://images.unsplash.com/photo-1416339306562-f3d12fefd36f?w=1200&h=500&fit=crop",
     isFeatured: false,
     products: [
       {
-        title: "Everyday Field Wallet",
+        title: "Carved Teak Serving Bowl",
         description:
-          "A four-pocket wallet in English bridle leather, saddle-stitched with braided linen. Skived thin so it disappears in a back pocket, burnished edges that darken with handling.",
-        category: "Leather",
-        price: 85,
+          "A single piece of seasoned teak hollowed by hand with traditional chisels, finished with natural oil. Deep enough for a family bowl of dal, handsome enough for the table.",
+        category: "Woodwork",
+        price: 2600,
         imageUrl:
-          "https://images.unsplash.com/photo-1627123424574-724758594e93?w=800&h=800&fit=crop",
-        materials: ["English bridle leather", "Linen thread"],
-        madeToOrder: false,
-        stock: 15,
+          "https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=800&h=800&fit=crop",
+        materials: ["Seasoned teak", "Natural oil finish"],
+        madeToOrder: true,
+        stock: 5,
       },
       {
-        title: "Brass-Key Carry Case",
+        title: "Hand-Carved Serving Platter",
         description:
-          "A snap-closing key case lined in pigskin, with brass hardware that will outshine the scratches of daily pockets. Fits six keys and a car fob.",
-        category: "Leather",
-        price: 62,
+          "A wide mango-wood platter with a carved rim, finished food-safe. For bread, fruit, or the evening thali — the chisel marks are left visible on purpose.",
+        category: "Woodwork",
+        price: 2400,
         imageUrl:
-          "https://images.unsplash.com/photo-1547949003-9792a18a2601?w=800&h=800&fit=crop",
-        materials: ["Veg-tan leather", "Solid brass"],
+          "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800&h=800&fit=crop",
+        materials: ["Mango wood", "Food-safe lacquer"],
+        madeToOrder: false,
+        stock: 9,
+      },
+      {
+        title: "Carved Teak Stool",
+        description:
+          "A low stool carved from a single block, with a hand-hollowed seat that deepens with use. Perfect beside the door, the rangoli corner, or the plant.",
+        category: "Woodwork",
+        price: 5200,
+        imageUrl:
+          "https://images.unsplash.com/photo-1532372320572-cda25653a26d?w=800&h=800&fit=crop",
+        materials: ["Teak", "Natural oil finish"],
         madeToOrder: true,
-        stock: 10,
+        stock: 3,
       },
     ],
   },
   {
-    shopName: "Inkline Press",
-    bio: "Linocut prints pulled by hand on an antique press in Hudson, NY.",
-    location: "Hudson, NY",
-    craft: "Prints",
+    shopName: "Dhokra Murtikar",
+    bio: "Lost-wax brass casting from the tribal craft villages of Odisha.",
+    location: "Bhubaneswar, Odisha",
+    craft: "Metalwork",
     story:
-      "Each print starts as a block of linoleum I carve with hand tools. I ink and pull every print on a 1930s press — the slight variations are the signature of the process, not a flaw. Small editions, signed and numbered, framed or unframed.",
+      "Dhokra is older than history — the lost-wax method our village uses was casting bronze in the Indus valley five thousand years ago. Every figure begins as a wax model, wrapped in clay, fired until the wax melts away, then filled with molten brass. What comes out is never perfect and never the same twice — and that is exactly what we sell.",
     image:
       "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop&crop=faces",
     coverImage:
-      "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=1200&h=500&fit=crop",
+      "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?w=1200&h=500&fit=crop",
     isFeatured: false,
     products: [
       {
-        title: "Night Heron Linocut",
+        title: "Dhokra Peacock Lamp",
         description:
-          "An edition of 50, pulled in charcoal-black oil ink on cotton paper. A heron mid-step, rendered in confident cuts. Ships flat with archival backing; frame not included.",
-        category: "Prints",
-        price: 78,
+          "A lost-wax brass peacock with a bulb-holder on its back — cast by the ancient cire-perdue method, one piece at a time. Soft light through the filigree tail, warm as old brass should be.",
+        category: "Metalwork",
+        price: 5900,
         imageUrl:
-          "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=800&h=800&fit=crop",
-        materials: ["Cotton paper", "Oil-based ink"],
-        madeToOrder: false,
-        stock: 22,
+          "https://images.unsplash.com/photo-1520697830682-bbb6e85e2b0b?w=800&h=800&fit=crop",
+        materials: ["Brass", "Lost-wax casting"],
+        madeToOrder: true,
+        stock: 2,
       },
       {
-        title: "Kitchen Garden Candles",
+        title: "Dancing Nataraja Figure",
         description:
-          "Hand-poured soy candles in ceramic vessels thrown by a neighboring potter — scented with tomato leaf, basil, and a trace of earth. When the wax is gone, the vessel stays.",
-        category: "Candles",
-        price: 38,
+          "A small dhokra Nataraja in traditional detail — cast in brass by the tribal lost-wax method. A devotional piece with the roughness of real hand-casting.",
+        category: "Metalwork",
+        price: 3600,
         imageUrl:
-          "https://images.unsplash.com/photo-1602523961358-f9f03dd557db?w=800&h=800&fit=crop",
-        materials: ["Soy wax", "Wheel-thrown vessel"],
+          "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&h=800&fit=crop",
+        materials: ["Brass"],
+        madeToOrder: false,
+        stock: 6,
+      },
+      {
+        title: "Dhokra Tribal Necklace",
+        description:
+          "A hand-cast brass necklace of tribal beads and pendants, each one from its own wax model. Lightweight, striking, and unmistakably handmade.",
+        category: "Metalwork",
+        price: 4100,
+        imageUrl:
+          "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=800&h=800&fit=crop",
+        materials: ["Brass", "Cotton cord"],
+        madeToOrder: true,
+        stock: 4,
+      },
+    ],
+  },
+  {
+    shopName: "Bans Kala",
+    bio: "Bamboo and cane woven in the hill workshops of the Northeast.",
+    location: "Guwahati, Assam",
+    craft: "Bamboo & Cane",
+    story:
+      "In Assam, bamboo is called 'green gold', and our family has woven it for as long as anyone remembers. We split the culms by hand, soak and bend them over fire, and weave them while they are still supple. Baskets, bags and furniture from our workshop are used for years — and when one finally wears out, it goes back to the earth.",
+    image:
+      "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=200&h=200&fit=crop&crop=faces",
+    coverImage:
+      "https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1200&h=500&fit=crop",
+    isFeatured: false,
+    products: [
+      {
+        title: "Cane & Bamboo Storage Basket",
+        description:
+          "A sturdy woven basket for yarn, rotis, or the week's vegetables — split cane over a bamboo frame, woven tight by hand. Strong enough for daily use, beautiful enough to leave out.",
+        category: "Bamboo & Cane",
+        price: 1600,
+        imageUrl:
+          "https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=800&h=800&fit=crop",
+        materials: ["Bamboo", "Rattan cane"],
+        madeToOrder: false,
+        stock: 11,
+      },
+      {
+        title: "Bamboo Tea Coaster Set",
+        description:
+          "Six hand-woven bamboo coasters, split and bent in the hill workshop tradition. Light, absorbent, and gentle on furniture.",
+        category: "Bamboo & Cane",
+        price: 750,
+        imageUrl:
+          "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&h=800&fit=crop",
+        materials: ["Bamboo"],
         madeToOrder: false,
         stock: 25,
+      },
+      {
+        title: "Cane Handbag",
+        description:
+          "A woven cane handbag with a bamboo handle and cotton lining — the kind carried through the bazaars of Guwahati. Each weave is worked by hand while the cane is still wet.",
+        category: "Bamboo & Cane",
+        price: 2800,
+        imageUrl:
+          "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=800&h=800&fit=crop",
+        materials: ["Rattan cane", "Bamboo handle", "Cotton lining"],
+        madeToOrder: true,
+        stock: 6,
       },
     ],
   },
 ];
 
 /**
- * Idempotently seeds the marketplace catalog (makers + products).
- * Safe to call repeatedly — it exits early if data already exists.
+ * Seeds the marketplace catalog (makers + products).
+ * Idempotent: on every run it replaces the pure catalog data (seed makers,
+ * which have no userId) with the current seed — so catalog content updates
+ * propagate to existing deployments. Artisan-created studios (makers linked
+ * to a user) are never touched.
  */
 export const seedCatalog = internalMutation({
   args: {},
   handler: async (ctx) => {
-    const existing = await ctx.db.query("makers").first();
-    if (existing !== null) return;
+    // Remove previously seeded catalog rows (seed makers have no userId),
+    // keeping user-created studios and their products intact.
+    const existingMakers = await ctx.db.query("makers").collect();
+    for (const m of existingMakers) {
+      if (m.userId) continue;
+      const products = await ctx.db
+        .query("products")
+        .withIndex("by_makerId", (q) => q.eq("makerId", m._id))
+        .collect();
+      for (const p of products) await ctx.db.delete(p._id);
+      await ctx.db.delete(m._id);
+    }
+
+    const validCategories = new Set([
+      "Pottery & Terracotta",
+      "Handloom Textiles",
+      "Block Printing",
+      "Jewelry",
+      "Woodwork",
+      "Metalwork",
+      "Bamboo & Cane",
+    ]);
 
     for (const m of seed) {
       const makerId = await ctx.db.insert("makers", {
@@ -318,19 +428,19 @@ export const seedCatalog = internalMutation({
         isFeatured: m.isFeatured,
       });
       for (const p of m.products) {
+        if (!validCategories.has(p.category)) continue;
         await ctx.db.insert("products", {
           makerId,
           title: p.title,
           description: p.description,
-          // seeded categories are from our fixed list
           category: p.category as
-            | "Ceramics"
-            | "Textiles"
-            | "Woodwork"
+            | "Pottery & Terracotta"
+            | "Handloom Textiles"
+            | "Block Printing"
             | "Jewelry"
-            | "Leather"
-            | "Prints"
-            | "Candles",
+            | "Woodwork"
+            | "Metalwork"
+            | "Bamboo & Cane",
           price: p.price,
           imageUrl: p.imageUrl,
           materials: [...p.materials],

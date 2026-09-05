@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { useI18n } from "@/lib/i18n";
 import { formatDate, formatPrice } from "@/lib/format";
 import {
   ArrowRight,
@@ -17,33 +18,35 @@ import {
   Truck,
 } from "lucide-react";
 
-const STATUS_META = {
-  paid: { label: "Paid", icon: CheckCircle2 },
-  shipped: { label: "Shipped", icon: Truck },
-  delivered: { label: "Delivered", icon: PackageCheck },
-} as const;
-
 export default function Orders() {
   const location = useLocation();
+  const { t } = useI18n();
   const justPlaced = (location.state as { justPlaced?: string } | null)?.justPlaced;
 
   const orders = useQuery(api.orders.listMyOrders);
-
   const ordered = orders ?? [];
 
+  const STATUS_META = {
+    paid: { label: t("orders.status.paid"), icon: CheckCircle2 },
+    shipped: { label: t("orders.status.shipped"), icon: Truck },
+    delivered: { label: t("orders.status.delivered"), icon: PackageCheck },
+  } as const;
+
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-background bg-paper">
       <SiteHeader />
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-10 sm:px-6">
         <h1 className="font-display text-3xl font-semibold tracking-tight">
-          Your orders
+          {t("orders.title")}
         </h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
           {orders === undefined
-            ? "Loading…"
+            ? t("shop.loading")
             : ordered.length === 0
-              ? "No orders yet"
-              : `${ordered.length} order${ordered.length === 1 ? "" : "s"} from independent studios`}
+              ? t("orders.empty")
+              : ordered.length === 1
+                ? t("orders.countOne")
+                : t("orders.count", { count: ordered.length })}
         </p>
 
         {orders !== undefined && ordered.length === 0 && (
@@ -52,16 +55,14 @@ export default function Orders() {
               <PackageOpen className="size-6 text-muted-foreground" />
             </span>
             <div>
-              <p className="font-display text-lg font-semibold">
-                Nothing ordered yet
-              </p>
+              <p className="font-display text-lg font-semibold">{t("orders.empty")}</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                When you buy from a maker, it&apos;ll show up here.
+                {t("orders.empty.body")}
               </p>
             </div>
             <Button asChild className="rounded-full">
               <Link to="/shop">
-                Start shopping <ArrowRight className="size-4" />
+                {t("orders.start")} <ArrowRight className="size-4" />
               </Link>
             </Button>
           </div>
@@ -71,10 +72,9 @@ export default function Orders() {
           <div className="mt-6 flex items-start gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
             <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-primary" />
             <div className="text-sm">
-              <p className="font-semibold">Order placed — thank you!</p>
+              <p className="font-semibold">{t("orders.placedBanner")}</p>
               <p className="mt-0.5 text-muted-foreground">
-                The makers you ordered from have been notified and will start
-                preparing your pieces.
+                {t("orders.placedBody")}
               </p>
             </div>
           </div>
@@ -104,7 +104,7 @@ export default function Orders() {
                     variant="secondary"
                     className="rounded-full font-normal text-muted-foreground"
                   >
-                    Order · {order._id.slice(-6)}
+                    {t("orders.number")} · {order._id.slice(-6)}
                   </Badge>
                 </div>
 
@@ -130,7 +130,10 @@ export default function Orders() {
                             {item.productTitle}
                           </Link>
                           <p className="mt-0.5 text-xs text-muted-foreground">
-                            Qty {item.quantity} · {formatPrice(item.price)} each
+                            {t("orders.qtyEach", {
+                              qty: item.quantity,
+                              price: formatPrice(item.price),
+                            })}
                           </p>
                         </div>
                         <span className="text-sm font-semibold">
@@ -150,7 +153,7 @@ export default function Orders() {
                       </span>
                     </span>
                     <span className="font-display text-base font-semibold">
-                      Total{" "}
+                      {t("orders.total")}{" "}
                       <span className="text-primary">
                         {formatPrice(order.total)}
                       </span>

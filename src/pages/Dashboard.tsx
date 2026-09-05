@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { ProductCard, type ProductCardProduct } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
+import { useI18n } from "@/lib/i18n";
 import { formatPrice } from "@/lib/format";
 import {
   ArrowRight,
@@ -19,6 +20,7 @@ import {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const cart = useQuery(api.cart.getCart);
   const favorites = useQuery(api.favorites.listFavorites);
   const orders = useQuery(api.orders.listMyOrders);
@@ -27,67 +29,66 @@ export default function Dashboard() {
     | (ProductCardProduct & { maker: { _id: string; shopName: string } | null })[]
     | undefined;
 
-  const firstName = (user?.name || user?.email || "maker").split(/[@\s]/)[0];
+  const firstName = (user?.name || user?.email || "friend").split(/[@\s]/)[0];
 
   const quickLinks = [
     {
       to: "/shop",
       icon: Store,
-      title: "Browse the marketplace",
-      body: "Fresh pieces from studios across the country.",
+      title: t("dash.browse"),
+      body: t("dash.browse.body"),
     },
     {
       to: "/orders",
       icon: Package,
-      title: "Track your orders",
-      body:
-        !orders
-          ? "Loading…"
-          : orders.length === 0
-            ? "No orders yet — your first one is waiting to happen."
-            : `${orders.length} order${orders.length === 1 ? "" : "s"} placed.`,
+      title: t("dash.track"),
+      body: !orders
+        ? t("shop.loading")
+        : orders.length === 0
+          ? t("dash.track.body")
+          : t("dash.track.bodyN", { count: orders.length }),
     },
     {
       to: "/favorites",
       icon: Heart,
-      title: "Your favorites",
+      title: t("dash.yourFav"),
       body:
         favorites === undefined
-          ? "Loading…"
+          ? t("shop.loading")
           : favorites.length === 0
-            ? "Heart a piece to keep it here."
-            : `${favorites.length} saved piece${favorites.length === 1 ? "" : "s"}.`,
+            ? t("dash.yourFav.body")
+            : t("dash.yourFav.bodyN", { count: favorites.length }),
     },
     {
       to: "/studio",
       icon: Sparkles,
       title:
         studio === null || studio === undefined
-          ? "Open your studio"
+          ? t("dash.openStudio")
           : studio.maker.shopName,
       body:
         studio === null || studio === undefined
-          ? "Sell your own work with zero platform fees."
-          : `${studio.products.length} listing${studio.products.length === 1 ? "" : "s"} · manage your storefront.`,
+          ? t("dash.openStudio.body")
+          : t("dash.studio.bodyN", { count: studio.products.length }),
     },
   ];
 
   return (
-    <div className="min-h-screen bg-background bg-dotted">
+    <div className="min-h-screen bg-background bg-paper">
       <SiteHeader />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-              Welcome back
+              {t("dash.welcome")}
             </p>
             <h1 className="mt-1.5 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-              Hey {firstName}
+              {t("dash.hey", { name: firstName })}
             </h1>
           </div>
           <Button asChild size="sm" className="rounded-full shadow-soft">
             <Link to="/shop">
-              <ShoppingBag className="size-4" /> Continue shopping
+              <ShoppingBag className="size-4" /> {t("dash.continue")}
             </Link>
           </Button>
         </div>
@@ -97,28 +98,23 @@ export default function Dashboard() {
           {[
             {
               icon: ShoppingBag,
-              label: "In your bag",
-              value:
-                !cart ? "—" : cart.count === 0 ? "0" : String(cart.count),
-              sub:
-                cart && cart.subtotal > 0 ? formatPrice(cart.subtotal) : "Empty",
+              label: t("dash.bag"),
+              value: !cart ? "—" : cart.count === 0 ? "0" : String(cart.count),
+              sub: cart && cart.subtotal > 0 ? formatPrice(cart.subtotal) : t("dash.empty"),
               to: "/cart",
             },
             {
               icon: Heart,
-              label: "Favorites",
-              value:
-                favorites === undefined
-                  ? "—"
-                  : String(favorites.length),
-              sub: "Saved pieces",
+              label: t("dash.fav"),
+              value: favorites === undefined ? "—" : String(favorites.length),
+              sub: t("dash.saved"),
               to: "/favorites",
             },
             {
               icon: Package,
-              label: "Orders",
+              label: t("dash.orders"),
               value: !orders ? "—" : String(orders.length),
-              sub: "All time",
+              sub: t("dash.allTime"),
               to: "/orders",
             },
           ].map((stat) => (
@@ -149,7 +145,7 @@ export default function Dashboard() {
               to={link.to}
               className="group flex items-start gap-4 rounded-xl border border-border/70 bg-card p-5 shadow-soft transition-shadow hover:shadow-soft-lg"
             >
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-secondary text-foreground">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
                 <link.icon className="size-5" />
               </span>
               <span className="min-w-0 flex-1">
@@ -180,11 +176,11 @@ export default function Dashboard() {
               </span>
               <span className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                 <MapPin className="size-3" />
-                {studio.maker.location} · your studio is live
+                {studio.maker.location} · {t("dash.live")}
               </span>
             </span>
             <span className="text-sm font-medium text-primary">
-              Manage listings →
+              {t("dash.manage")}
             </span>
           </Link>
         )}
@@ -193,11 +189,11 @@ export default function Dashboard() {
         <section className="mt-12">
           <div className="flex items-end justify-between">
             <h2 className="font-display text-2xl font-semibold tracking-tight">
-              New from the studios
+              {t("dash.new")}
             </h2>
             <Button asChild variant="ghost" size="sm" className="text-primary hover:text-primary">
               <Link to="/shop">
-                See all <ArrowRight className="size-4" />
+                {t("dash.seeAll")} <ArrowRight className="size-4" />
               </Link>
             </Button>
           </div>

@@ -7,10 +7,12 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { ProductCard, type ProductCardProduct } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useI18n } from "@/lib/i18n";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
   Hand,
+  Hammer,
   Leaf,
   MapPin,
   Package,
@@ -27,9 +29,9 @@ const fadeUp = {
 
 function Hero() {
   const navigate = useNavigate();
+  const { t } = useI18n();
   return (
     <section className="relative overflow-hidden">
-      {/* Ambient editorial backdrop */}
       <div
         aria-hidden
         className="absolute inset-0 -z-10"
@@ -40,7 +42,7 @@ function Hero() {
       />
       <div
         aria-hidden
-        className="absolute inset-0 -z-10 bg-gradient-to-b from-background/70 via-background/85 to-background"
+        className="absolute inset-0 -z-10 bg-gradient-to-b from-background/80 via-background/90 to-background"
       />
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center px-4 pb-20 pt-24 text-center sm:px-6 sm:pt-32">
         <motion.div
@@ -53,7 +55,7 @@ function Hero() {
             className="gap-2 rounded-full border-border bg-card/80 px-4 py-1.5 text-xs font-medium backdrop-blur"
           >
             <Sparkles className="size-3.5 text-primary" />
-            900+ independent studios · zero middlemen
+            {t("hero.badge")}
           </Badge>
         </motion.div>
 
@@ -61,22 +63,20 @@ function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.08 }}
-          className="mt-6 max-w-3xl font-display text-4xl font-semibold leading-[1.08] tracking-tight sm:text-6xl"
+          className="mt-6 max-w-3xl font-display text-4xl font-semibold leading-[1.12] tracking-tight sm:text-6xl"
         >
-          Buy straight from
+          {t("hero.title1")}
           <br />
-          the <span className="text-primary italic">maker&apos;s bench</span>
+          <span className="text-primary italic">{t("hero.title2")}</span>
         </motion.h1>
 
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.16 }}
-          className="mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg"
+          className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg"
         >
-          Handmade Direct connects you directly with the ceramicists, weavers,
-          and woodworkers behind the work — every piece ships from the studio
-          that made it.
+          {t("hero.subtitle")}
         </motion.p>
 
         <motion.div
@@ -90,17 +90,17 @@ function Hero() {
             className="h-12 rounded-full px-7 text-base shadow-soft"
             onClick={() => navigate("/shop")}
           >
-            Explore the marketplace
+            {t("hero.cta.shop")}
             <ArrowRight className="size-4" />
           </Button>
           <Button
             size="lg"
             variant="outline"
             className="h-12 rounded-full bg-card/70 px-7 text-base backdrop-blur"
-            onClick={() => navigate("/studio")}
+            onClick={() => navigate("/auth?role=artisan")}
           >
-            <Store className="size-4" />
-            Sell your work
+            <Hammer className="size-4" />
+            {t("hero.cta.sell")}
           </Button>
         </motion.div>
 
@@ -111,13 +111,13 @@ function Hero() {
           className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs font-medium text-muted-foreground"
         >
           <span className="flex items-center gap-2">
-            <Truck className="size-4 text-primary" /> Studio-to-door shipping
+            <Truck className="size-4 text-primary" /> {t("hero.point1")}
           </span>
           <span className="flex items-center gap-2">
-            <Leaf className="size-4 text-primary" /> Small-batch materials
+            <Leaf className="size-4 text-primary" /> {t("hero.point2")}
           </span>
           <span className="flex items-center gap-2">
-            <Hand className="size-4 text-primary" /> Made by a real person
+            <Hand className="size-4 text-primary" /> {t("hero.point3")}
           </span>
         </motion.div>
       </div>
@@ -126,6 +126,7 @@ function Hero() {
 }
 
 function FeaturedProducts() {
+  const { t } = useI18n();
   const products = useQuery(api.shop.listProducts, { limit: 8 }) as
     | (ProductCardProduct & { maker: { _id: string; shopName: string } | null })[]
     | undefined;
@@ -135,15 +136,15 @@ function FeaturedProducts() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-            Fresh from the kiln
+            {t("sec.latest.eyebrow")}
           </p>
           <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight">
-            This week&apos;s standouts
+            {t("sec.latest.title")}
           </h2>
         </div>
         <Button asChild variant="ghost" className="gap-1.5 text-primary hover:text-primary">
           <Link to="/shop">
-            View all pieces <ArrowRight className="size-4" />
+            {t("sec.latest.all")} <ArrowRight className="size-4" />
           </Link>
         </Button>
       </div>
@@ -165,21 +166,21 @@ function FeaturedProducts() {
 }
 
 function Makers() {
+  const { t } = useI18n();
   const makers = useQuery(api.shop.listFeaturedMakers);
 
   return (
-    <section className="border-y border-border/70 bg-secondary/40">
+    <section className="border-y border-border/70 bg-weave">
       <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
         <div className="max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-            The studios
+            {t("sec.makers.eyebrow")}
           </p>
           <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight">
-            Meet the people behind the pieces
+            {t("sec.makers.title")}
           </h2>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            No warehouses, no white-label resellers. Every studio is run by the
-            maker who answers your questions and signs your package.
+            {t("sec.makers.sub")}
           </p>
         </div>
 
@@ -192,7 +193,7 @@ function Makers() {
             >
               <Link
                 to={`/maker/${maker._id}`}
-                className="group block overflow-hidden rounded-xl border border-border/70 bg-card shadow-soft transition-shadow hover:shadow-soft-lg"
+                className="group block overflow-hidden rounded-2xl border border-border/70 bg-card shadow-soft transition-shadow hover:shadow-soft-lg"
               >
                 <div className="aspect-[3/1.2] overflow-hidden">
                   {maker.coverImage ? (
@@ -228,7 +229,9 @@ function Makers() {
                     </p>
                   </div>
                   <span className="ml-auto shrink-0 text-xs font-medium text-muted-foreground">
-                    {maker.productCount} piece{maker.productCount === 1 ? "" : "s"}
+                    {maker.productCount === 1
+                      ? t("maker.onePiece")
+                      : t("maker.pieces", { count: maker.productCount })}
                   </span>
                 </div>
               </Link>
@@ -245,51 +248,40 @@ function Makers() {
 }
 
 const STEPS = [
-  {
-    icon: Store,
-    title: "Discover a studio",
-    body: "Browse by craft — ceramics, textiles, woodwork, jewelry — and read the maker's story before you buy.",
-  },
-  {
-    icon: Package,
-    title: "Order the piece",
-    body: "Many pieces are made to order, so your mug or board is made for you, not pulled from a shelf.",
-  },
-  {
-    icon: Truck,
-    title: "It ships from the bench",
-    body: "Your package leaves the maker's own studio, wrapped by the hands that made it. No middlemen, ever.",
-  },
+  { icon: Store, titleKey: "how.step1.title", bodyKey: "how.step1.body" },
+  { icon: Package, titleKey: "how.step2.title", bodyKey: "how.step2.body" },
+  { icon: Truck, titleKey: "how.step3.title", bodyKey: "how.step3.body" },
 ];
 
 function HowItWorks() {
+  const { t } = useI18n();
   return (
     <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
       <div className="text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-          How it works
+          {t("sec.how.eyebrow")}
         </p>
         <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight">
-          From studio bench to your doorstep
+          {t("sec.how.title")}
         </h2>
       </div>
       <div className="mt-10 grid gap-5 md:grid-cols-3">
         {STEPS.map((step, i) => (
           <motion.div
-            key={step.title}
+            key={step.titleKey}
             {...fadeUp}
             transition={{ duration: 0.4, delay: i * 0.08 }}
-            className="rounded-xl border border-border/70 bg-card p-6 shadow-soft"
+            className="rounded-2xl border border-border/70 bg-card p-6 shadow-soft"
           >
             <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <step.icon className="size-5" />
             </div>
             <p className="mt-4 font-display text-base font-semibold tracking-tight">
               <span className="mr-2 text-muted-foreground/60">0{i + 1}</span>
-              {step.title}
+              {t(step.titleKey)}
             </p>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              {step.body}
+              {t(step.bodyKey)}
             </p>
           </motion.div>
         ))}
@@ -300,12 +292,13 @@ function HowItWorks() {
 
 function ArtisanCta() {
   const navigate = useNavigate();
+  const { t } = useI18n();
   return (
     <section className="mx-auto w-full max-w-6xl px-4 pb-20 sm:px-6">
       <motion.div
         {...fadeUp}
         transition={{ duration: 0.45 }}
-        className="relative overflow-hidden rounded-2xl bg-primary px-6 py-14 text-center text-primary-foreground shadow-soft-lg sm:px-12"
+        className="relative overflow-hidden rounded-3xl bg-primary px-6 py-14 text-center text-primary-foreground shadow-soft-lg sm:px-12"
       >
         <div
           aria-hidden
@@ -317,21 +310,20 @@ function ArtisanCta() {
         />
         <div className="relative">
           <h2 className="mx-auto max-w-2xl font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-            Make things for a living, not a platform
+            {t("sec.cta.title")}
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-primary-foreground/85 sm:text-base">
-            Keep 100% of your customer relationship. List your pieces, tell
-            your story, and ship your work — Handmade Direct takes no cut of
-            your order.
+            {t("sec.cta.sub")}
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <Button
               size="lg"
               variant="secondary"
               className="h-12 rounded-full px-7 text-base"
-              onClick={() => navigate("/studio")}
+              onClick={() => navigate("/auth?role=artisan")}
             >
-              Open your studio
+              <Hammer className="size-4" />
+              {t("sec.cta.button")}
               <ArrowRight className="size-4" />
             </Button>
             <Button
@@ -340,7 +332,7 @@ function ArtisanCta() {
               className="h-12 rounded-full border-primary-foreground/40 bg-transparent px-7 text-base text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
               onClick={() => navigate("/shop")}
             >
-              See what sells
+              {t("sec.cta.secondary")}
             </Button>
           </div>
         </div>
@@ -350,14 +342,15 @@ function ArtisanCta() {
 }
 
 function CommunityStrip() {
+  const { t } = useI18n();
   return (
     <section className="border-t border-border/70 bg-card">
       <div className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-6 px-4 py-12 text-center sm:px-6 md:grid-cols-4">
         {[
-          { value: "900+", label: "Independent studios" },
-          { value: "7", label: "Craft categories" },
-          { value: "100%", label: "Sold by the maker" },
-          { value: "0", label: "Middlemen" },
+          { value: "900+", label: t("stat.studios") },
+          { value: "7", label: t("stat.crafts") },
+          { value: "100%", label: t("stat.direct") },
+          { value: "0", label: t("stat.middlemen") },
         ].map((stat) => (
           <div key={stat.label}>
             <p className="font-display text-3xl font-semibold tracking-tight text-primary">
@@ -384,12 +377,13 @@ export default function Landing() {
   }, [seeded, ensureSeeded]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-paper">
       <SiteHeader transparent />
       <main>
         <Hero />
         <FeaturedProducts />
         <Makers />
+        <div className="divider-blockprint my-2 opacity-50" />
         <HowItWorks />
         <CommunityStrip />
         <ArtisanCta />

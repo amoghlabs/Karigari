@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
+import { categoryName, useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { PRODUCT_CATEGORIES } from "@/lib/categories";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -26,6 +27,7 @@ type ShopProduct = ProductCardProduct & {
 
 export default function Shop() {
   const { isAuthenticated } = useAuth();
+  const { lang, t } = useI18n();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>("All");
   const [sort, setSort] = useState<string>("featured");
@@ -50,41 +52,43 @@ export default function Shop() {
 
   const handleToggleFavorite = (productId: string) => {
     if (!isAuthenticated) {
-      toast.error("Sign in to save favorites.");
+      toast.error(t("toast.fav.signin"));
       return;
     }
     toggleFavorite({ productId: productId as Id<"products"> })
       .then((nowFavorited) =>
-        toast.success(nowFavorited ? "Saved to favorites" : "Removed from favorites"),
+        toast.success(nowFavorited ? t("toast.fav.added") : t("toast.fav.removed")),
       )
       .catch((err: Error) => toast.error(err.message));
   };
 
   const handleAddToCart = (productId: string) => {
     if (!isAuthenticated) {
-      toast.error("Sign in to add pieces to your bag.");
+      toast.error(t("toast.bag.signin"));
       return;
     }
     addToCart({ productId: productId as Id<"products"> })
-      .then(() => toast.success("Added to your bag"))
+      .then(() => toast.success(t("toast.bag.added")))
       .catch((err: Error) => toast.error(err.message));
   };
 
   const categories = ["All", ...PRODUCT_CATEGORIES];
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-background bg-paper">
       <SiteHeader />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="font-display text-3xl font-semibold tracking-tight">
-              The marketplace
+              {t("shop.title")}
             </h1>
             <p className="mt-1.5 text-sm text-muted-foreground">
               {products === undefined
-                ? "Loading pieces…"
-                : `${products.length} piece${products.length === 1 ? "" : "s"} from independent studios`}
+                ? t("shop.loading")
+                : products.length === 1
+                  ? t("shop.countOne")
+                  : t("shop.count", { count: products.length })}
             </p>
           </div>
           <div className="flex w-full items-center gap-2 sm:w-auto">
@@ -93,7 +97,7 @@ export default function Shop() {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search pieces, materials…"
+                placeholder={t("shop.search")}
                 className="pl-9"
               />
             </div>
@@ -103,10 +107,10 @@ export default function Shop() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="featured">Featured</SelectItem>
-                <SelectItem value="newest">Newest</SelectItem>
-                <SelectItem value="price-asc">Price: low to high</SelectItem>
-                <SelectItem value="price-desc">Price: high to low</SelectItem>
+                <SelectItem value="featured">{t("shop.sort.featured")}</SelectItem>
+                <SelectItem value="newest">{t("shop.sort.newest")}</SelectItem>
+                <SelectItem value="price-asc">{t("shop.sort.asc")}</SelectItem>
+                <SelectItem value="price-desc">{t("shop.sort.desc")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -125,7 +129,7 @@ export default function Shop() {
                   : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
               )}
             >
-              {c}
+              {c === "All" ? t("shop.all") : categoryName(c, lang)}
             </button>
           ))}
         </div>
@@ -150,9 +154,11 @@ export default function Shop() {
         {products !== undefined && products.length === 0 && (
           <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border bg-card py-16 text-center">
             <Store className="size-8 text-muted-foreground/60" />
-            <p className="font-display text-lg font-semibold">No pieces found</p>
+            <p className="font-display text-lg font-semibold">
+              {t("shop.empty.title")}
+            </p>
             <p className="max-w-sm text-sm text-muted-foreground">
-              Try a different search or category — new work lands every week.
+              {t("shop.empty.body")}
             </p>
             <Button
               variant="outline"
@@ -162,7 +168,7 @@ export default function Shop() {
                 setCategory("All");
               }}
             >
-              Clear filters
+              {t("shop.clear")}
             </Button>
           </div>
         )}

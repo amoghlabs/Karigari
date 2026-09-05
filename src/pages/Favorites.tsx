@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { ProductCard, type ProductCardProduct } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
+import { useI18n } from "@/lib/i18n";
 import type { Id } from "@/convex/_generated/dataModel";
 import { ArrowRight, Heart } from "lucide-react";
 import { toast } from "sonner";
@@ -17,6 +18,7 @@ type FavProduct = ProductCardProduct & {
 
 export default function Favorites() {
   const { isAuthenticated } = useAuth();
+  const { t } = useI18n();
 
   const products = useQuery(
     api.favorites.listFavoriteProducts,
@@ -37,24 +39,26 @@ export default function Favorites() {
   const handleToggleFavorite = (productId: string) => {
     toggleFavorite({ productId: productId as Id<"products"> })
       .then((now) =>
-        toast.success(now ? "Saved to favorites" : "Removed from favorites"),
+        toast.success(now ? t("toast.fav.added") : t("toast.fav.removed")),
       )
       .catch((err: Error) => toast.error(err.message));
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-background bg-paper">
       <SiteHeader />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
         <h1 className="font-display text-3xl font-semibold tracking-tight">
-          Favorites
+          {t("fav.title")}
         </h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
           {products === undefined
-            ? "Loading…"
+            ? t("shop.loading")
             : products.length === 0
-              ? "Nothing saved yet"
-              : `${products.length} piece${products.length === 1 ? "" : "s"} you love`}
+              ? t("fav.empty")
+              : products.length === 1
+                ? t("fav.countOne")
+                : t("fav.count", { count: products.length })}
         </p>
 
         {products !== undefined && products.length === 0 && (
@@ -63,16 +67,14 @@ export default function Favorites() {
               <Heart className="size-6 text-muted-foreground" />
             </span>
             <div>
-              <p className="font-display text-lg font-semibold">
-                No favorites yet
-              </p>
+              <p className="font-display text-lg font-semibold">{t("fav.empty")}</p>
               <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-                Tap the heart on any piece to keep it here while you decide.
+                {t("fav.empty.body")}
               </p>
             </div>
             <Button asChild className="rounded-full">
               <Link to="/shop">
-                Browse the marketplace <ArrowRight className="size-4" />
+                {t("cart.browse")} <ArrowRight className="size-4" />
               </Link>
             </Button>
           </div>

@@ -1,4 +1,5 @@
 import '@vly-ai/integrations';
+import { I18nProvider } from "@/lib/i18n";
 import { Toaster } from "@/components/ui/sonner";
 import { RequireAuth } from "@/components/RequireAuth";
 import { VlyToolbar } from "../vly-toolbar-readonly.tsx";
@@ -122,10 +123,11 @@ createRoot(document.getElementById("root")!).render(
         <VlyToolbar />
       </ToolbarErrorBoundary>
       <ConvexAuthProvider client={convex}>
-        <BrowserRouter>
-          <RouteSyncer />
-          <Suspense fallback={<RouteLoading />}>
-            <Routes>
+        <I18nProvider>
+          <BrowserRouter>
+            <RouteSyncer />
+            <Suspense fallback={<RouteLoading />}>
+              <Routes>
               <Route path="/" element={<Landing />} />
               <Route
                 path="/auth"
@@ -175,10 +177,11 @@ createRoot(document.getElementById("root")!).render(
                 }
               />
               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-        <Toaster />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+          <Toaster />
+        </I18nProvider>
       </ConvexAuthProvider>
     </RootErrorBoundary>
   </StrictMode>,

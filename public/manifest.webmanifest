@@ -1,11 +1,11 @@
 {
-  "name": "freebuff.com application",
-  "short_name": "freebuff.com",
-  "description": "freebuff.com application",
+  "name": "कारीgari — Buy straight from the artisan",
+  "short_name": "कारीgari",
+  "description": "Buy handmade Indian craft straight from the artisan who made it.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "background_color": "#faf3e7",
+  "theme_color": "#b85c38",
   "icons": [
     {
       "src": "/logo.png",

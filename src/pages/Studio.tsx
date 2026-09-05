@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useRef, useState } from "react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -19,25 +19,34 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { PRODUCT_CATEGORIES } from "@/lib/categories";
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
+import { PRODUCT_CATEGORIES, CATEGORY_ICON } from "@/lib/categories";
+import { categoryName, useI18n, type Lang } from "@/lib/i18n";
 import { formatPrice } from "@/lib/format";
+import { useAuth } from "@/hooks/use-auth";
+import { useSpeechRecognition } from "@/hooks/use-speech";
 import {
+  ArrowLeft,
+  ArrowRight,
+  Camera,
+  CheckCircle2,
   Eye,
+  Hammer,
   HeartHandshake,
   Loader2,
   MapPin,
+  Mic,
   Package,
   Pencil,
+  Phone,
   Plus,
   Settings2,
   Sparkles,
   Store,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -65,28 +74,269 @@ type Listing = {
   isActive: boolean;
 };
 
-/* ---------- Studio onboarding ---------- */
+/* ------------------------------------------------------------------ */
+/* Photo upload via Convex storage                                     */
+/* ------------------------------------------------------------------ */
+
+async function uploadPhoto(
+  uploadUrl: string,
+  file: File,
+): Promise<Id<"_storage">> {
+  const res = await fetch(uploadUrl, {
+    method: "POST",
+    headers: { "Content-Type": file.type },
+    body: file,
+  });
+  if (!res.ok) throw new Error("Photo upload failed");
+  const data = (await res.json()) as { storageId: string };
+  return data.storageId as Id<"_storage">;
+}
+
+function usePhoto() {
+  const getUploadUrl = useMutation(api.studio.getUploadUrl);
+  const [uploading, setUploading] = useState(false);
+  const [storageId, setStorageId] = useState<Id<"_storage"> | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const pick = async (file: File | undefined) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await getUploadUrl();
+      const id = await uploadPhoto(url, file);
+      setStorageId(id);
+      const objectUrl = URL.createObjectURL(file);
+      setPreview(objectUrl);
+      toast.success("Photo ready");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const reset = () => {
+    setStorageId(null);
+    setPreview(null);
+  };
+
+  return {
+    uploading,
+    storageId,
+    preview,
+    inputRef,
+    pick,
+    reset,
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* Phone + OTP gate — the artisan's only sign-in path                  */
+/* ------------------------------------------------------------------ */
+
+function PhoneGate({ reason }: { reason: string }) {
+  const { signIn } = useAuth();
+  const { t } = useI18n();
+  const requestPhoneOtp = useMutation(api.phoneOtp.requestPhoneOtp);
+  const verifyPhoneOtp = useMutation(api.phoneOtp.verifyPhoneOtp);
+  const [stage, setStage] = useState<"phone" | "code">("phone");
+  const [phone, setPhone] = useState("");
+  const [normalizedPhone, setNormalizedPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSendCode = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsLoading(true);
+    setError(null);
+    try {
+      try {
+        await signIn("anonymous");
+      } catch {
+        /* session already exists */
+      }
+      const result = await requestPhoneOtp({ phone });
+      setNormalizedPhone(result.phone);
+      setStage("code");
+      setOtp("");
+      toast.info(t("st.phone.demo", { code: result.devCode }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerify = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsLoading(true);
+    setError(null);
+    try {
+      await verifyPhoneOtp({ phone: normalizedPhone, code: otp });
+      toast.success(t("st.phone.verified"));
+    } catch (err) {
+      console.error("OTP verification error:", err);
+      setError(t("st.otp.wrong"));
+      setOtp("");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="mx-auto w-full max-w-md">
+      <div className="text-center">
+        <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <Phone className="size-5" />
+        </span>
+        <h1 className="mt-4 font-display text-2xl font-semibold tracking-tight">
+          {t("st.phone.title")}
+        </h1>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">{reason}</p>
+      </div>
+
+      {stage === "phone" ? (
+        <form onSubmit={handleSendCode} className="mt-6 space-y-3 rounded-2xl border border-border/70 bg-card p-6 shadow-soft">
+          <div className="relative">
+            <Phone className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="tel"
+              inputMode="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder={t("st.phone.placeholder")}
+              className="tap-lg rounded-full pl-11 text-base"
+              disabled={isLoading}
+              required
+            />
+          </div>
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          <Button type="submit" size="lg" className="tap-lg w-full rounded-full text-base" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 size-4 animate-spin" />
+                {t("st.phone.sending")}
+              </>
+            ) : (
+              <>
+                {t("st.phone.send")}
+                <ArrowRight className="ml-2 size-4" />
+              </>
+            )}
+          </Button>
+        </form>
+      ) : (
+        <form onSubmit={handleVerify} className="mt-6 space-y-3 rounded-2xl border border-border/70 bg-card p-6 shadow-soft">
+          <p className="text-center text-sm text-muted-foreground">
+            {t("st.otp.sub", { phone: normalizedPhone })}
+          </p>
+          <div className="flex justify-center">
+            <InputOTP
+              value={otp}
+              onChange={setOtp}
+              maxLength={6}
+              disabled={isLoading}
+            >
+              <InputOTPGroup>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <InputOTPSlot key={i} index={i} />
+                ))}
+              </InputOTPGroup>
+            </InputOTP>
+          </div>
+          {error && <p className="text-center text-sm text-destructive">{error}</p>}
+          <Button type="submit" size="lg" className="tap-lg w-full rounded-full text-base" disabled={isLoading || otp.length !== 6}>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 size-4 animate-spin" />
+                {t("st.otp.verifying")}
+              </>
+            ) : (
+              <>
+                {t("st.otp.verify")}
+                <ArrowRight className="ml-2 size-4" />
+              </>
+            )}
+          </Button>
+          <p className="text-center text-sm text-muted-foreground">
+            {t("st.otp.resend")}{" "}
+            <Button
+              type="button"
+              variant="link"
+              className="h-auto p-0"
+              onClick={() => setStage("phone")}
+            >
+              {t("st.otp.tryAgain")}
+            </Button>
+          </p>
+        </form>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Onboarding — name → craft (tap) → voice story → AI → review         */
+/* ------------------------------------------------------------------ */
 
 function Onboarding() {
+  const { lang, t } = useI18n();
   const createMaker = useMutation(api.studio.createMaker);
+  const generateStory = useAction(api.aiStory.generateStory);
+  const speech = useSpeechRecognition(lang);
+  const photo = usePhoto();
+
+  const [step, setStep] = useState(1);
+  const [name, setName] = useState("");
+  const [craft, setCraft] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const [generated, setGenerated] = useState<null | {
+    story: string;
+    bio: string;
+    shopName: string;
+  }>(null);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
-    shopName: "",
-    craft: "Ceramics",
-    location: "",
-    bio: "",
-    story: "",
-  });
+  const [typedNote, setTypedNote] = useState("");
 
-  const set = (key: keyof typeof form) => (value: string) =>
-    setForm((f) => ({ ...f, [key]: value }));
+  const voiceNote = speech.transcript || typedNote;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleGenerate = async () => {
+    if (!craft) return;
+    setGenerating(true);
+    try {
+      const result = await generateStory({
+        craft,
+        name,
+        voiceNote: voiceNote || undefined,
+      });
+      setGenerated({
+        story: lang === "hi" ? result.storyHi : result.story,
+        bio: lang === "hi" ? result.bioHi : result.bio,
+        shopName: lang === "hi" ? result.shopNameHi : result.shopName,
+      });
+      setStep(4);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Generation failed.");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleLaunch = async () => {
+    if (!craft || !generated) return;
     setSaving(true);
     try {
-      await createMaker(form);
-      toast.success("Your studio is live!");
+      await createMaker({
+        shopName: generated.shopName,
+        craft,
+        location: locationInput || "",
+        bio: generated.bio,
+        story: generated.story,
+        imageStorageId: photo.storageId ?? undefined,
+      });
+      toast.success(t("ob.launched"));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -94,93 +344,283 @@ function Onboarding() {
     }
   };
 
+  const [locationInput, setLocationInput] = useState("");
+
+  const progress = `${step} / 3`;
+
   return (
     <div className="mx-auto w-full max-w-2xl">
-      <div className="text-center">
-        <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-          <Sparkles className="size-5" />
-        </span>
-        <h1 className="mt-4 font-display text-3xl font-semibold tracking-tight">
-          Open your studio
-        </h1>
-        <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-          Tell buyers who you are and what you make. Your story is what sells
-          handmade work — platforms can&apos;t fake it.
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+          {progress}
         </p>
+        <div className="flex gap-1.5">
+          {[1, 2, 3].map((i) => (
+            <span
+              key={i}
+              className={cn(
+                "h-1.5 rounded-full transition-all",
+                i <= Math.min(step, 3) ? "w-6 bg-primary" : "w-3 bg-border",
+              )}
+            />
+          ))}
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-8 space-y-5 rounded-xl border border-border/70 bg-card p-6 shadow-soft sm:p-8">
-        <div className="space-y-2">
-          <Label htmlFor="shopName">Shop name</Label>
+      {/* Step 1 — name */}
+      {step === 1 && (
+        <div className="mt-8 rounded-2xl border border-border/70 bg-card p-6 shadow-soft sm:p-8">
+          <h1 className="font-display text-3xl font-semibold tracking-tight">
+            {t("ob.name.title")}
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">{t("ob.name.sub")}</p>
           <Input
-            id="shopName"
-            value={form.shopName}
-            onChange={(e) => set("shopName")(e.target.value)}
-            placeholder="Kiln & Ember"
-            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={t("ob.name.placeholder")}
+            className="tap-lg mt-6 rounded-full text-base"
+            autoFocus
           />
+          <Button
+            size="lg"
+            className="tap-lg mt-4 w-full rounded-full text-base"
+            disabled={name.trim().length < 2}
+            onClick={() => setStep(2)}
+          >
+            {t("ob.next")} <ArrowRight className="ml-2 size-4" />
+          </Button>
         </div>
-        <div className="grid gap-5 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label>Primary craft</Label>
-            <Select value={form.craft} onValueChange={set("craft")}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PRODUCT_CATEGORIES.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      )}
+
+      {/* Step 2 — craft tap grid */}
+      {step === 2 && (
+        <div className="mt-8">
+          <h1 className="font-display text-3xl font-semibold tracking-tight">
+            {t("ob.craft.title")}
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">{t("ob.craft.sub")}</p>
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {PRODUCT_CATEGORIES.map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => {
+                  setCraft(c);
+                  setStep(3);
+                }}
+                className={cn(
+                  "tap-lg flex flex-col items-center gap-2 rounded-2xl border p-5 text-center shadow-soft transition-all hover:-translate-y-0.5",
+                  craft === c
+                    ? "border-primary bg-primary/10 text-foreground"
+                    : "border-border/70 bg-card hover:border-primary/40",
+                )}
+              >
+                <span className="text-3xl">{CATEGORY_ICON[c] ?? "🪡"}</span>
+                <span className="text-sm font-semibold">
+                  {categoryName(c, lang)}
+                </span>
+              </button>
+            ))}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
-              value={form.location}
-              onChange={(e) => set("location")(e.target.value)}
-              placeholder="Asheville, NC"
-            />
+          <div className="mt-4 flex justify-between">
+            <Button variant="ghost" onClick={() => setStep(1)}>
+              <ArrowLeft className="mr-2 size-4" /> {t("ob.back")}
+            </Button>
           </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="bio">Short bio</Label>
-          <Textarea
-            id="bio"
-            value={form.bio}
-            onChange={(e) => set("bio")(e.target.value)}
-            placeholder="Wheel-thrown stoneware fired in a wood kiln in the hills outside Asheville."
-            rows={2}
-          />
+      )}
+
+      {/* Step 3 — voice story + photo */}
+      {step === 3 && (
+        <div className="mt-8 space-y-5">
+          <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-soft sm:p-8">
+            <h1 className="font-display text-3xl font-semibold tracking-tight">
+              {t("ob.story.title")}
+            </h1>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              {t("ob.story.sub")}
+            </p>
+
+            {/* Voice */}
+            <div className="mt-6 flex flex-col items-center gap-3">
+              <button
+                type="button"
+                onClick={() => (speech.listening ? speech.stop() : speech.start())}
+                className={cn(
+                  "tap-lg flex size-20 items-center justify-center rounded-full shadow-soft transition-all",
+                  speech.listening
+                    ? "animate-pulse bg-destructive text-white"
+                    : "bg-primary text-primary-foreground hover:scale-105",
+                )}
+                aria-label={t("ob.story.record")}
+              >
+                <Mic className="size-8" />
+              </button>
+              <p className="text-sm font-medium text-muted-foreground">
+                {speech.listening
+                  ? t("ob.story.recording")
+                  : voiceNote
+                    ? t("ob.story.recorded")
+                    : speech.supported
+                      ? t("ob.story.record")
+                      : t("ob.story.unsupported")}
+              </p>
+            </div>
+
+            <div className="mt-4">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                {t("ob.story.or")}
+              </p>
+              <Textarea
+                value={typedNote}
+                onChange={(e) => setTypedNote(e.target.value)}
+                placeholder={t("ob.story.placeholder")}
+                rows={3}
+              />
+            </div>
+
+            {/* Photo */}
+            <div className="mt-6 flex items-center gap-4 border-t border-border/60 pt-5">
+              {photo.preview ? (
+                <img
+                  src={photo.preview}
+                  alt=""
+                  className="size-16 rounded-xl border border-border object-cover"
+                />
+              ) : (
+                <span className="flex size-16 items-center justify-center rounded-xl bg-secondary text-secondary-foreground">
+                  <Camera className="size-6" />
+                </span>
+              )}
+              <div>
+                <p className="text-sm font-semibold">{t("ob.photo")}</p>
+                <p className="text-xs text-muted-foreground">{t("ob.photo.sub")}</p>
+                <input
+                  ref={photo.inputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => photo.pick(e.target.files?.[0])}
+                />
+                <div className="mt-2 flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={photo.uploading}
+                    onClick={() => photo.inputRef.current?.click()}
+                  >
+                    {photo.uploading ? (
+                      <Loader2 className="mr-1 size-3.5 animate-spin" />
+                    ) : null}
+                    {photo.preview ? t("ob.photo.change") : t("ob.photo.upload")}
+                  </Button>
+                  {photo.preview && (
+                    <Button type="button" variant="ghost" size="sm" onClick={photo.reset}>
+                      <Trash2 className="size-3.5" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <Button
+              size="lg"
+              className="tap-lg mt-6 w-full rounded-full text-base shadow-soft"
+              disabled={generating || !craft}
+              onClick={handleGenerate}
+            >
+              {generating && <Loader2 className="mr-2 size-4 animate-spin" />}
+              {generating ? t("ob.generating") : t("ob.generate")}
+            </Button>
+            <div className="mt-3 flex justify-start">
+              <Button variant="ghost" onClick={() => setStep(2)}>
+                <ArrowLeft className="mr-2 size-4" /> {t("ob.back")}
+              </Button>
+            </div>
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="story">Your story</Label>
-          <Textarea
-            id="story"
-            value={form.story}
-            onChange={(e) => set("story")(e.target.value)}
-            placeholder="Why do you make what you make? Buyers fall in love with the person, not the product."
-            rows={4}
-          />
+      )}
+
+      {/* Step 4 — review AI story */}
+      {step === 4 && generated && (
+        <div className="mt-8 rounded-2xl border border-primary/30 bg-card p-6 shadow-soft sm:p-8">
+          <div className="flex items-center gap-2 text-primary">
+            <Sparkles className="size-4" />
+            <p className="text-xs font-semibold uppercase tracking-[0.16em]">
+              {t("ob.review.title")}
+            </p>
+          </div>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            {t("ob.review.sub")}
+          </p>
+
+          <div className="mt-6 space-y-4">
+            <div className="space-y-2">
+              <Label>{t("ob.review.shopName")}</Label>
+              <Input
+                value={generated.shopName}
+                onChange={(e) =>
+                  setGenerated({ ...generated, shopName: e.target.value })
+                }
+                className="tap-lg rounded-full"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t("ob.review.location")}</Label>
+              <Input
+                value={locationInput}
+                onChange={(e) => setLocationInput(e.target.value)}
+                placeholder={t("ob.review.location")}
+                className="tap-lg rounded-full"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t("ob.review.storyLabel")}</Label>
+              <Textarea
+                value={generated.story}
+                onChange={(e) =>
+                  setGenerated({ ...generated, story: e.target.value })
+                }
+                rows={6}
+                className="leading-6"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t("ob.review.bioLabel")}</Label>
+              <Textarea
+                value={generated.bio}
+                onChange={(e) =>
+                  setGenerated({ ...generated, bio: e.target.value })
+                }
+                rows={2}
+              />
+            </div>
+          </div>
+
+          <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+            <Button variant="ghost" onClick={() => setStep(3)} disabled={saving}>
+              <ArrowLeft className="mr-2 size-4" /> {t("ob.back")}
+            </Button>
+            <Button
+              size="lg"
+              className="tap-lg flex-1 rounded-full text-base shadow-soft"
+              disabled={saving || !generated.story.trim() || !generated.shopName.trim()}
+              onClick={handleLaunch}
+            >
+              {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
+              {saving ? t("ob.launching") : t("ob.launch")}
+            </Button>
+          </div>
         </div>
-        <Button
-          type="submit"
-          size="lg"
-          className="h-12 w-full rounded-full text-base shadow-soft"
-          disabled={saving || form.shopName.trim().length < 2}
-        >
-          {saving && <Loader2 className="size-4 animate-spin" />}
-          {saving ? "Setting up…" : "Launch my studio"}
-        </Button>
-      </form>
+      )}
     </div>
   );
 }
 
-/* ---------- Listing create / edit dialog ---------- */
+/* ------------------------------------------------------------------ */
+/* Listing dialog — photo + voice + AI description                     */
+/* ------------------------------------------------------------------ */
 
 type ListingDialogState =
   | { mode: "closed" }
@@ -190,55 +630,89 @@ type ListingDialogState =
 function ListingDialog({
   state,
   onClose,
+  makerCraft,
 }: {
   state: ListingDialogState;
   onClose: () => void;
+  makerCraft: string;
 }) {
+  const { lang, t } = useI18n();
   const createProduct = useMutation(api.studio.createProduct);
   const updateProduct = useMutation(api.studio.updateProduct);
-  const [saving, setSaving] = useState(false);
+  const generateListingCopy = useAction(api.aiStory.generateListingCopy);
+  const speech = useSpeechRecognition(lang);
+  const photo = usePhoto();
+
   const isEdit = state.mode === "edit";
   const listing = state.mode === "edit" ? state.listing : null;
 
   const [form, setForm] = useState(() => ({
     title: listing?.title ?? "",
     description: listing?.description ?? "",
-    category: listing?.category ?? "Ceramics",
+    category: listing?.category ?? makerCraft,
     price: listing?.price?.toString() ?? "",
-    imageUrl: listing?.imageUrl ?? "",
     materials: listing?.materials.join(", ") ?? "",
     madeToOrder: listing?.madeToOrder ?? true,
     stock: listing?.stock?.toString() ?? "1",
     isActive: listing?.isActive ?? true,
   }));
+  const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
+
+  const handleAiGenerate = async () => {
+    if (!speech.transcript.trim() && !form.title.trim()) {
+      toast.info(t("ld.aiNeedsVoice"));
+      return;
+    }
+    setGenerating(true);
+    try {
+      const result = await generateListingCopy({
+        craft: form.category,
+        title: form.title || undefined,
+        voiceNote: speech.transcript || undefined,
+      });
+      set("description", lang === "hi" ? result.descriptionHi : result.description);
+      if (!form.title.trim() && result.titleHint) set("title", result.titleHint);
+      toast.success(t("ld.aiGenerate"));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Generation failed.");
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
-      const payload = {
+      const base = {
         title: form.title,
         description: form.description,
         category: form.category as (typeof PRODUCT_CATEGORIES)[number],
         price: Number(form.price) || 0,
-        imageUrl: form.imageUrl,
         materials: form.materials.split(",").map((m) => m.trim()),
         madeToOrder: form.madeToOrder,
         stock: Number(form.stock) || 0,
       };
       if (isEdit && listing) {
         await updateProduct({
+          ...base,
           productId: listing._id as Id<"products">,
-          ...payload,
+          imageUrl: listing.imageUrl,
+          imageStorageId: photo.storageId ?? undefined,
           isActive: form.isActive,
         });
-        toast.success("Listing updated");
+        toast.success(t("stm.editToast"));
       } else {
-        await createProduct(payload);
-        toast.success("Listing published");
+        await createProduct({
+          ...base,
+          imageUrl: undefined,
+          imageStorageId: photo.storageId ?? undefined,
+        });
+        toast.success(t("stm.publishToast"));
       }
       onClose();
     } catch (err) {
@@ -253,113 +727,224 @@ function ListingDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="font-display text-xl tracking-tight">
-            {isEdit ? "Edit listing" : "New listing"}
+            {isEdit ? t("ld.edit") : t("ld.new")}
           </DialogTitle>
           <DialogDescription>
-            {isEdit
-              ? "Update the details of this piece."
-              : "Describe the piece so buyers know exactly what they're getting."}
+            {isEdit ? t("ld.editSub") : t("ld.newSub")}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Voice + AI */}
+          <div className="rounded-xl border border-primary/25 bg-primary/5 p-4">
+            <p className="flex items-center gap-1.5 text-sm font-semibold">
+              <Mic className="size-4 text-primary" />
+              {t("ld.voice")}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">{t("ld.voiceHelp")}</p>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => (speech.listening ? speech.stop() : speech.start())}
+                className={cn(
+                  "flex size-12 items-center justify-center rounded-full shadow-soft transition-all",
+                  speech.listening
+                    ? "animate-pulse bg-destructive text-white"
+                    : "bg-primary text-primary-foreground hover:scale-105",
+                )}
+                aria-label={t("ld.voice")}
+              >
+                <Mic className="size-5" />
+              </button>
+              {speech.transcript && (
+                <p className="max-w-[220px] truncate text-xs text-muted-foreground">
+                  {speech.transcript}
+                </p>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+                disabled={generating}
+                onClick={handleAiGenerate}
+              >
+                {generating ? (
+                  <>
+                    <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                    {t("ld.aiGenerating")}
+                  </>
+                ) : (
+                  <>{t("ld.aiGenerate")}</>
+                )}
+              </Button>
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="title">Piece name</Label>
+            <Label htmlFor="ldTitle">{t("ld.name")}</Label>
             <Input
-              id="title"
+              id="ldTitle"
               value={form.title}
               onChange={(e) => set("title", e.target.value)}
-              placeholder="Ember Speckled Mug"
+              placeholder={t("ld.name.ph")}
               required
             />
           </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Category</Label>
-              <Select value={form.category} onValueChange={(v) => set("category", v)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PRODUCT_CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>{t("ld.category")}</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {PRODUCT_CATEGORIES.slice(0, 4).map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => set("category", c)}
+                    className={cn(
+                      "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                      form.category === c
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-card text-muted-foreground",
+                    )}
+                  >
+                    {CATEGORY_ICON[c]} {categoryName(c, lang)}
+                  </button>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {PRODUCT_CATEGORIES.slice(4).map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => set("category", c)}
+                    className={cn(
+                      "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                      form.category === c
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-card text-muted-foreground",
+                    )}
+                  >
+                    {CATEGORY_ICON[c]} {categoryName(c, lang)}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="price">Price (USD)</Label>
+              <Label htmlFor="ldPrice">{t("ld.price")}</Label>
               <Input
-                id="price"
+                id="ldPrice"
                 type="number"
-                min="0.5"
-                step="0.01"
+                min="10"
+                step="10"
                 value={form.price}
                 onChange={(e) => set("price", e.target.value)}
-                placeholder="42"
+                placeholder="1500"
                 required
               />
             </div>
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="imageUrl">Image URL</Label>
-            <Input
-              id="imageUrl"
-              value={form.imageUrl}
-              onChange={(e) => set("imageUrl", e.target.value)}
-              placeholder="https://images.unsplash.com/…"
-              required
+            <Label>{t("ld.photo")}</Label>
+            {photo.preview ? (
+              <div className="flex items-center gap-3">
+                <img
+                  src={photo.preview}
+                  alt=""
+                  className="size-16 rounded-xl border border-border object-cover"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={photo.uploading}
+                  onClick={() => photo.inputRef.current?.click()}
+                >
+                  {photo.uploading && <Loader2 className="mr-1 size-3.5 animate-spin" />}
+                  {t("ob.photo.change")}
+                </Button>
+              </div>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={photo.uploading}
+                onClick={() => photo.inputRef.current?.click()}
+              >
+                {photo.uploading ? (
+                  <>
+                    <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                    {t("ob.photo.uploading")}
+                  </>
+                ) : (
+                  <>
+                    <Camera className="mr-1.5 size-3.5" />
+                    {t("ob.photo.upload")}
+                  </>
+                )}
+              </Button>
+            )}
+            <input
+              ref={photo.inputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => photo.pick(e.target.files?.[0])}
             />
+            <p className="text-xs text-muted-foreground">{t("ld.photoHelp")}</p>
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="materials">Materials (comma-separated)</Label>
+            <Label htmlFor="ldMaterials">{t("ld.materials")}</Label>
             <Input
-              id="materials"
+              id="ldMaterials"
               value={form.materials}
               onChange={(e) => set("materials", e.target.value)}
-              placeholder="Stoneware clay, Wood-ash glaze"
+              placeholder={t("ld.materials.ph")}
             />
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="ldDesc">{t("ld.desc")}</Label>
             <Textarea
-              id="description"
+              id="ldDesc"
               value={form.description}
               onChange={(e) => set("description", e.target.value)}
-              placeholder="What is it, how is it made, how is it used?"
+              placeholder={t("ld.desc.ph")}
               rows={3}
             />
           </div>
+
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
             <div className="flex items-center gap-2">
               <Switch
-                id="madeToOrder"
+                id="ldMadeToOrder"
                 checked={form.madeToOrder}
                 onCheckedChange={(v) => set("madeToOrder", v)}
               />
-              <Label htmlFor="madeToOrder" className="text-sm font-normal">
-                Made to order
+              <Label htmlFor="ldMadeToOrder" className="text-sm font-normal">
+                {t("ld.madeToOrder")}
               </Label>
             </div>
             {isEdit && (
               <div className="flex items-center gap-2">
                 <Switch
-                  id="isActive"
+                  id="ldActive"
                   checked={form.isActive}
                   onCheckedChange={(v) => set("isActive", v)}
                 />
-                <Label htmlFor="isActive" className="text-sm font-normal">
-                  Listed publicly
+                <Label htmlFor="ldActive" className="text-sm font-normal">
+                  {t("ld.public")}
                 </Label>
               </div>
             )}
             <div className="ml-auto flex items-center gap-2">
-              <Label htmlFor="stock" className="text-sm font-normal">
-                Stock
+              <Label htmlFor="ldStock" className="text-sm font-normal">
+                {t("ld.stock")}
               </Label>
               <Input
-                id="stock"
+                id="ldStock"
                 type="number"
                 min="0"
                 className="w-20"
@@ -368,13 +953,14 @@ function ListingDialog({
               />
             </div>
           </div>
+
           <DialogFooter className="gap-2">
             <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>
-              Cancel
+              {t("ld.cancel")}
             </Button>
             <Button type="submit" disabled={saving}>
               {saving && <Loader2 className="size-4 animate-spin" />}
-              {isEdit ? "Save changes" : "Publish listing"}
+              {isEdit ? t("ld.save") : t("ld.publish")}
             </Button>
           </DialogFooter>
         </form>
@@ -383,14 +969,140 @@ function ListingDialog({
   );
 }
 
-/* ---------- Main studio view ---------- */
+/* ------------------------------------------------------------------ */
+/* Studio settings                                                     */
+/* ------------------------------------------------------------------ */
+
+function StudioSettings({
+  open,
+  onClose,
+  maker,
+}: {
+  open: boolean;
+  onClose: () => void;
+  maker: Maker;
+}) {
+  const { lang, t } = useI18n();
+  const updateMaker = useMutation(api.studio.updateMaker);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    shopName: maker.shopName,
+    craft: maker.craft,
+    location: maker.location,
+    bio: maker.bio,
+    story: maker.story,
+  });
+  const makerId = maker._id as Id<"makers">;
+
+  const handleSubmit = async () => {
+    setSaving(true);
+    try {
+      await updateMaker({ makerId, ...form });
+      toast.success(t("stm.editToast"));
+      onClose();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="font-display text-xl tracking-tight">
+            {t("stm.profile")}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="setShopName">{t("ob.review.shopName")}</Label>
+            <Input
+              id="setShopName"
+              value={form.shopName}
+              onChange={(e) => setForm((f) => ({ ...f, shopName: e.target.value }))}
+            />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>{t("ld.category")}</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {PRODUCT_CATEGORIES.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, craft: c }))}
+                    className={cn(
+                      "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                      form.craft === c
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-card text-muted-foreground",
+                    )}
+                  >
+                    {CATEGORY_ICON[c]} {categoryName(c, lang)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="setLocation">{t("ob.review.location")}</Label>
+              <Input
+                id="setLocation"
+                value={form.location}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, location: e.target.value }))
+                }
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="setBio">{t("ob.review.bioLabel")}</Label>
+            <Textarea
+              id="setBio"
+              rows={2}
+              value={form.bio}
+              onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="setStory">{t("ob.review.storyLabel")}</Label>
+            <Textarea
+              id="setStory"
+              rows={5}
+              value={form.story}
+              onChange={(e) => setForm((f) => ({ ...f, story: e.target.value }))}
+            />
+          </div>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="ghost" onClick={onClose} disabled={saving}>
+            {t("ld.cancel")}
+          </Button>
+          <Button onClick={handleSubmit} disabled={saving || form.shopName.trim().length < 2}>
+            {saving && <Loader2 className="size-4 animate-spin" />}
+            {t("ld.save")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Studio page                                                         */
+/* ------------------------------------------------------------------ */
 
 export default function Studio() {
+  const { user } = useAuth();
+  const { lang, t } = useI18n();
   const studio = useQuery(api.studio.myListings);
   const sales = useQuery(api.studio.mySales);
   const retireProduct = useMutation(api.studio.retireProduct);
   const [dialog, setDialog] = useState<ListingDialogState>({ mode: "closed" });
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const isArtisan = user?.role === "artisan" && !!user?.phone;
 
   if (studio === undefined) {
     return (
@@ -404,11 +1116,25 @@ export default function Studio() {
     );
   }
 
-  if (studio === null) {
+  /* 1. Not yet an artisan → phone + OTP gate (also covers signed-in buyers). */
+  if (!isArtisan) {
     return (
-      <div className="flex min-h-screen flex-col bg-background">
+      <div className="flex min-h-screen flex-col bg-background bg-paper">
         <SiteHeader />
         <main className="flex-1 px-4 py-14 sm:px-6">
+          <PhoneGate reason={t("st.phone.needed")} />
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
+
+  /* 2. Artisan without a studio → 3-tap onboarding. */
+  if (studio === null) {
+    return (
+      <div className="flex min-h-screen flex-col bg-background bg-paper">
+        <SiteHeader />
+        <main className="flex-1 px-4 py-12 sm:px-6">
           <Onboarding />
         </main>
         <SiteFooter />
@@ -416,6 +1142,7 @@ export default function Studio() {
     );
   }
 
+  /* 3. Artisan with a studio → management. */
   const maker = studio.maker;
   const listings = studio.products;
   const activeCount = listings.filter((l) => l.isActive).length;
@@ -426,7 +1153,7 @@ export default function Studio() {
 
   const handleRetire = (listingId: string) => {
     retireProduct({ productId: listingId as Id<"products"> })
-      .then(() => toast.success("Listing retired"))
+      .then(() => toast.success(t("stm.retiredToast")))
       .catch((err: Error) => toast.error(err.message));
   };
 
@@ -436,27 +1163,28 @@ export default function Studio() {
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-              Artisan studio
+            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+              <Hammer className="size-3.5" />
+              {t("st.title")}
             </p>
             <h1 className="mt-1.5 font-display text-3xl font-semibold tracking-tight">
               {maker.shopName}
             </h1>
             <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
               <MapPin className="size-3.5" />
-              {maker.location} · {maker.craft}
+              {maker.location} · {categoryName(maker.craft, lang)}
             </p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
-              <Settings2 className="size-4" /> Studio profile
+              <Settings2 className="size-4" /> {t("stm.profile")}
             </Button>
             <Button
               size="sm"
               className="shadow-soft"
               onClick={() => setDialog({ mode: "create" })}
             >
-              <Plus className="size-4" /> New listing
+              <Plus className="size-4" /> {t("stm.newListing")}
             </Button>
           </div>
         </div>
@@ -464,10 +1192,10 @@ export default function Studio() {
         {/* Stats */}
         <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
           {[
-            { label: "Active listings", value: String(activeCount), icon: Store },
-            { label: "Total listings", value: String(listings.length), icon: Package },
-            { label: "Units sold", value: String(unitsSold), icon: HeartHandshake },
-            { label: "Revenue", value: formatPrice(totalRevenue), icon: Eye },
+            { label: t("stm.active"), value: String(activeCount), icon: Store },
+            { label: t("stm.total"), value: String(listings.length), icon: Package },
+            { label: t("stm.sold"), value: String(unitsSold), icon: HeartHandshake },
+            { label: t("stm.revenue"), value: formatPrice(totalRevenue), icon: Eye },
           ].map((stat) => (
             <div
               key={stat.label}
@@ -487,28 +1215,19 @@ export default function Studio() {
         </div>
 
         {/* Listings */}
-        <div className="mt-10 flex items-end justify-between">
-          <h2 className="font-display text-xl font-semibold tracking-tight">
-            Your listings
-          </h2>
-        </div>
-
+        <h2 className="mt-10 font-display text-xl font-semibold tracking-tight">
+          {t("stm.listings")}
+        </h2>
         {listings.length === 0 ? (
           <div className="mt-6 flex flex-col items-center gap-4 rounded-xl border border-dashed border-border bg-card py-16 text-center">
             <span className="flex size-14 items-center justify-center rounded-full bg-secondary">
               <Package className="size-6 text-muted-foreground" />
             </span>
-            <div>
-              <p className="font-display text-lg font-semibold">
-                No listings yet
-              </p>
-              <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-                Publish your first piece — buyers can&apos;t find you until you
-                do.
-              </p>
-            </div>
+            <p className="max-w-sm text-sm text-muted-foreground">
+              {t("stm.sales.empty")}
+            </p>
             <Button onClick={() => setDialog({ mode: "create" })} className="rounded-full">
-              <Plus className="size-4" /> Create a listing
+              <Plus className="size-4" /> {t("stm.newListing")}
             </Button>
           </div>
         ) : (
@@ -532,21 +1251,22 @@ export default function Studio() {
                       variant="secondary"
                       className={cn(
                         "rounded-full font-normal",
-                        listing.isActive
-                          ? "text-foreground"
-                          : "text-muted-foreground",
+                        listing.isActive ? "text-foreground" : "text-muted-foreground",
                       )}
                     >
-                      {listing.isActive ? "Live" : "Retired"}
+                      {listing.isActive ? t("stm.live") : t("stm.retired")}
                     </Badge>
                     {listing.madeToOrder && (
-                      <Badge variant="outline" className="rounded-full font-normal text-muted-foreground">
-                        Made to order
+                      <Badge
+                        variant="outline"
+                        className="rounded-full font-normal text-muted-foreground"
+                      >
+                        {t("card.madeToOrder")}
                       </Badge>
                     )}
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {listing.category} · Stock {listing.stock}
+                    {categoryName(listing.category, lang)} · {t("stm.stock", { n: listing.stock })}
                   </p>
                 </div>
                 <span className="hidden font-display text-base font-semibold sm:block">
@@ -556,7 +1276,7 @@ export default function Studio() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    aria-label={`Edit ${listing.title}`}
+                    aria-label={t("stm.edit")}
                     onClick={() => setDialog({ mode: "edit", listing })}
                   >
                     <Pencil className="size-4" />
@@ -565,7 +1285,7 @@ export default function Studio() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      aria-label={`Retire ${listing.title}`}
+                      aria-label={t("stm.retire")}
                       className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                       onClick={() => handleRetire(listing._id)}
                     >
@@ -580,11 +1300,11 @@ export default function Studio() {
 
         {/* Sales */}
         <h2 className="mt-10 font-display text-xl font-semibold tracking-tight">
-          Recent sales
+          {t("stm.sales")}
         </h2>
         {(sales ?? []).length === 0 ? (
           <p className="mt-4 rounded-xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
-            No sales yet — share your studio link and the orders will land here.
+            {t("stm.sales.empty")}
           </p>
         ) : (
           <div className="mt-4 space-y-2.5">
@@ -601,12 +1321,10 @@ export default function Studio() {
                     className="size-11 shrink-0 rounded-lg object-cover"
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">
-                      {sale.productTitle}
-                    </p>
+                    <p className="truncate text-sm font-medium">{sale.productTitle}</p>
                     <p className="text-xs text-muted-foreground">
-                      Qty {sale.quantity} · {sale.order?.fullName} ·{" "}
-                      {sale.order?.status}
+                      {t("orders.qtyEach", { qty: sale.quantity, price: formatPrice(sale.price) })} ·{" "}
+                      {sale.order?.fullName}
                     </p>
                   </div>
                   <span className="text-sm font-semibold text-primary">
@@ -622,127 +1340,16 @@ export default function Studio() {
         <ListingDialog
           state={dialog}
           onClose={() => setDialog({ mode: "closed" })}
+          makerCraft={maker.craft}
         />
       )}
 
-      <StudioSettings open={settingsOpen} onClose={() => setSettingsOpen(false)} maker={maker} />
+      <StudioSettings
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        maker={maker}
+      />
       <SiteFooter />
     </div>
-  );
-}
-
-/* ---------- Studio profile settings ---------- */
-
-function StudioSettings({
-  open,
-  onClose,
-  maker,
-}: {
-  open: boolean;
-  onClose: () => void;
-  maker: Maker;
-}) {
-  const updateMaker = useMutation(api.studio.updateMaker);
-  const makerId = maker._id as Id<"makers">;
-  const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
-    shopName: maker.shopName,
-    craft: maker.craft,
-    location: maker.location,
-    bio: maker.bio,
-    story: maker.story,
-  });
-
-  const handleSubmit = async () => {
-    setSaving(true);
-    try {
-      await updateMaker({ makerId, ...form });
-      toast.success("Studio profile updated");
-      onClose();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="font-display text-xl tracking-tight">
-            Studio profile
-          </DialogTitle>
-          <DialogDescription>
-            This is what buyers see on your storefront.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="editShopName">Shop name</Label>
-            <Input
-              id="editShopName"
-              value={form.shopName}
-              onChange={(e) => setForm((f) => ({ ...f, shopName: e.target.value }))}
-            />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Primary craft</Label>
-              <Select
-                value={form.craft}
-                onValueChange={(v) => setForm((f) => ({ ...f, craft: v }))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PRODUCT_CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="editLocation">Location</Label>
-              <Input
-                id="editLocation"
-                value={form.location}
-                onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="editBio">Short bio</Label>
-            <Textarea
-              id="editBio"
-              rows={2}
-              value={form.bio}
-              onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="editStory">Your story</Label>
-            <Textarea
-              id="editStory"
-              rows={4}
-              value={form.story}
-              onChange={(e) => setForm((f) => ({ ...f, story: e.target.value }))}
-            />
-          </div>
-        </div>
-        <DialogFooter className="gap-2">
-          <Button variant="ghost" onClick={onClose} disabled={saving}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={saving || form.shopName.trim().length < 2}>
-            {saving && <Loader2 className="size-4 animate-spin" />}
-            Save changes
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }

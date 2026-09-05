@@ -25,6 +25,7 @@ export const createMaker = mutation({
     bio: v.string(),
     story: v.string(),
     image: v.optional(v.string()),
+    imageStorageId: v.optional(v.id("_storage")),
     coverImage: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -40,6 +41,11 @@ export const createMaker = mutation({
       .first();
     if (existing) throw new Error("You already have a studio.");
 
+    const storedImage = args.imageStorageId
+      ? await ctx.storage.getUrl(args.imageStorageId)
+      : undefined;
+    const image = args.image ?? storedImage ?? undefined;
+
     return ctx.db.insert("makers", {
       userId,
       shopName,
@@ -47,7 +53,7 @@ export const createMaker = mutation({
       location: args.location.trim() || "Somewhere handmade",
       bio: args.bio.trim() || shopName,
       story: args.story.trim() || shopName,
-      image: args.image,
+      image,
       coverImage: args.coverImage,
       isFeatured: false,
     });
@@ -115,7 +121,8 @@ export const createProduct = mutation({
     description: v.string(),
     category: categoryValidator,
     price: v.number(),
-    imageUrl: v.string(),
+    imageUrl: v.optional(v.string()),
+    imageStorageId: v.optional(v.id("_storage")),
     materials: v.array(v.string()),
     madeToOrder: v.boolean(),
     stock: v.number(),
@@ -133,8 +140,11 @@ export const createProduct = mutation({
     const title = args.title.trim();
     if (title.length < 3) throw new Error("Give your piece a name.");
     if (args.price <= 0) throw new Error("Price must be greater than zero.");
-    if (!args.imageUrl.trim())
-      throw new Error("Add an image URL for your piece.");
+
+    const imageUrl =
+      args.imageUrl?.trim() ??
+      (args.imageStorageId ? await ctx.storage.getUrl(args.imageStorageId) : "");
+    if (!imageUrl) throw new Error("Add a photo of your piece.");
 
     return ctx.db.insert("products", {
       makerId: maker._id,
@@ -142,7 +152,7 @@ export const createProduct = mutation({
       description: args.description.trim() || "A handmade piece.",
       category: args.category,
       price: Math.round(args.price * 100) / 100,
-      imageUrl: args.imageUrl.trim(),
+      imageUrl,
       materials: args.materials.filter((m) => m.trim().length > 0),
       madeToOrder: args.madeToOrder,
       stock: Math.max(0, Math.round(args.stock)),
@@ -159,7 +169,8 @@ export const updateProduct = mutation({
     description: v.string(),
     category: categoryValidator,
     price: v.number(),
-    imageUrl: v.string(),
+    imageUrl: v.optional(v.string()),
+    imageStorageId: v.optional(v.id("_storage")),
     materials: v.array(v.string()),
     madeToOrder: v.boolean(),
     stock: v.number(),
@@ -176,6 +187,12 @@ export const updateProduct = mutation({
     if (!maker || maker.userId !== userId)
       throw new Error("Not your listing.");
 
+    const storedImage = args.imageStorageId
+      ? await ctx.storage.getUrl(args.imageStorageId)
+      : undefined;
+    const imageUrl =
+      args.imageUrl?.trim() || storedImage || product.imageUrl;
+
     await ctx.db.patch(args.productId, {
       title: args.title.trim() || product.title,
       description: args.description.trim() || product.description,
@@ -183,13 +200,21 @@ export const updateProduct = mutation({
         ? args.category
         : product.category,
       price: Math.max(0.5, Math.round(args.price * 100) / 100),
-      imageUrl: args.imageUrl.trim() || product.imageUrl,
+      imageUrl,
       materials: args.materials.filter((m) => m.trim().length > 0),
       madeToOrder: args.madeToOrder,
       stock: Math.max(0, Math.round(args.stock)),
       isActive: args.isActive,
     });
     return { ok: true };
+  },
+});
+
+/** Upload URL for artisan photos (Convex storage). */
+export const getUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    return ctx.storage.generateUploadUrl();
   },
 });
 

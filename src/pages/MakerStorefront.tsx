@@ -1,16 +1,17 @@
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ProductCard, type ProductCardProduct } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
+import { categoryName, useI18n } from "@/lib/i18n";
 import type { Id } from "@/convex/_generated/dataModel";
 import { MapPin, Package, Store } from "lucide-react";
-import { Link } from "react-router";
 
 export default function MakerStorefront() {
   const { id } = useParams<{ id: string }>();
+  const { lang, t } = useI18n();
 
   const maker = useQuery(
     api.shop.getMaker,
@@ -30,7 +31,7 @@ export default function MakerStorefront() {
     | undefined;
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-background bg-paper">
       <SiteHeader />
       <main className="flex-1">
         {maker === undefined && (
@@ -48,11 +49,9 @@ export default function MakerStorefront() {
         {maker === null && (
           <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-3 px-4 py-24 text-center sm:px-6">
             <Store className="size-8 text-muted-foreground/60" />
-            <p className="font-display text-lg font-semibold">
-              This studio doesn&apos;t exist
-            </p>
+            <p className="font-display text-lg font-semibold">{t("mf.notFound")}</p>
             <Button asChild size="sm">
-              <Link to="/shop">Back to the marketplace</Link>
+              <Link to="/shop">{t("pd.gone.cta")}</Link>
             </Button>
           </div>
         )}
@@ -94,20 +93,22 @@ export default function MakerStorefront() {
                     </h1>
                     <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
                       <MapPin className="size-3.5" />
-                      {maker.location} · {maker.craft}
+                      {maker.location} · {categoryName(maker.craft, lang)}
                     </p>
                   </div>
                 </div>
                 <span className="flex items-center gap-1.5 self-start rounded-full border border-border bg-card px-4 py-1.5 text-xs font-medium text-muted-foreground shadow-soft sm:self-auto">
                   <Package className="size-3.5" />
-                  {maker.products.length} piece{maker.products.length === 1 ? "" : "s"} listed
+                  {maker.products.length === 1
+                    ? t("mf.onePiece")
+                    : t("mf.pieces", { count: maker.products.length })}
                 </span>
               </div>
 
               <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_2fr]">
                 <aside className="h-fit rounded-xl border border-border/70 bg-card p-6 shadow-soft lg:sticky lg:top-24">
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-                    The studio
+                    {t("mf.studio")}
                   </p>
                   <p className="mt-3 text-sm leading-6 text-muted-foreground">
                     {maker.bio}
@@ -119,11 +120,11 @@ export default function MakerStorefront() {
 
                 <div>
                   <h2 className="font-display text-xl font-semibold tracking-tight">
-                    Pieces from this studio
+                    {t("mf.fromThisStudio")}
                   </h2>
                   {maker.products.length === 0 ? (
                     <p className="mt-6 rounded-xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
-                      Nothing listed right now — check back soon.
+                      {t("mf.empty")}
                     </p>
                   ) : (
                     <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-6 xl:grid-cols-3">

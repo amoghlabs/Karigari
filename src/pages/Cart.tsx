@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useI18n } from "@/lib/i18n";
 import { formatPrice } from "@/lib/format";
 import {
   ArrowRight,
@@ -32,6 +33,7 @@ import { toast } from "sonner";
 
 export default function Cart() {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const cart = useQuery(api.cart.getCart);
   const updateItem = useMutation(api.cart.updateCartItem);
   const removeItem = useMutation(api.cart.removeCartItem);
@@ -67,7 +69,7 @@ export default function Cart() {
     try {
       const result = await placeOrder({ fullName, address });
       setCheckoutOpen(false);
-      toast.success("Order placed — thank you!");
+      toast.success(t("cart.ordered"));
       navigate("/orders", {
         state: { justPlaced: result.orderId, total: result.total },
       });
@@ -79,16 +81,18 @@ export default function Cart() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-background bg-paper">
       <SiteHeader />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
         <h1 className="font-display text-3xl font-semibold tracking-tight">
-          Your bag
+          {t("cart.title")}
         </h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
           {count === 0
-            ? "Nothing here yet"
-            : `${count} piece${count === 1 ? "" : "s"} from independent studios`}
+            ? t("cart.empty")
+            : count === 1
+              ? t("cart.countOne")
+              : t("cart.count", { count })}
         </p>
 
         {lines.length === 0 ? (
@@ -97,16 +101,12 @@ export default function Cart() {
               <ShoppingBag className="size-6 text-muted-foreground" />
             </span>
             <div>
-              <p className="font-display text-lg font-semibold">
-                Your bag is empty
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Find something made by hand — you&apos;ll know the difference.
-              </p>
+              <p className="font-display text-lg font-semibold">{t("cart.empty")}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{t("cart.empty.body")}</p>
             </div>
             <Button asChild className="rounded-full">
               <Link to="/shop">
-                Browse the marketplace <ArrowRight className="size-4" />
+                {t("cart.browse")} <ArrowRight className="size-4" />
               </Link>
             </Button>
           </div>
@@ -138,12 +138,12 @@ export default function Cart() {
                           {line.product.title}
                         </Link>
                         <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                          by {line.makerName}
+                          {t("card.by", { name: line.makerName })}
                         </p>
                       </div>
                       <button
                         type="button"
-                        aria-label={`Remove ${line.product.title}`}
+                        aria-label={t("cart.remove", { name: line.product.title })}
                         onClick={() =>
                           removeItem({ itemId: line.itemId }).catch(
                             (err: Error) => toast.error(err.message),
@@ -198,23 +198,23 @@ export default function Cart() {
 
             <aside className="h-fit rounded-xl border border-border/70 bg-card p-6 shadow-soft lg:sticky lg:top-24">
               <p className="font-display text-lg font-semibold tracking-tight">
-                Order summary
+                {t("cart.summary")}
               </p>
               <div className="mt-4 space-y-2.5 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="text-muted-foreground">{t("cart.subtotal")}</span>
                   <span className="font-medium">{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Shipping</span>
+                  <span className="text-muted-foreground">{t("cart.shipping")}</span>
                   <span className="flex items-center gap-1 text-muted-foreground">
-                    <Truck className="size-3.5" /> Set by each maker
+                    <Truck className="size-3.5" /> {t("cart.shippingNote")}
                   </span>
                 </div>
               </div>
               <Separator className="my-4" />
               <div className="flex justify-between font-display text-lg font-semibold">
-                <span>Total</span>
+                <span>{t("cart.total")}</span>
                 <span className="text-primary">{formatPrice(subtotal)}</span>
               </div>
               <Button
@@ -222,11 +222,11 @@ export default function Cart() {
                 className="mt-5 h-12 w-full rounded-full text-base shadow-soft"
                 onClick={() => setCheckoutOpen(true)}
               >
-                Checkout <ArrowRight className="size-4" />
+                {t("cart.checkout")} <ArrowRight className="size-4" />
               </Button>
               <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
                 <Hand className="size-3.5" />
-                Every order ships straight from the studio
+                {t("cart.fromStudio")}
               </p>
             </aside>
           </div>
@@ -237,16 +237,18 @@ export default function Cart() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="font-display text-xl tracking-tight">
-              Checkout
+              {t("cart.checkout")}
             </DialogTitle>
             <DialogDescription>
-              {count} piece{count === 1 ? "" : "s"} · {formatPrice(subtotal)} —
-              tell us where to send it.
+              {t("cart.checkout.body", {
+                count,
+                total: formatPrice(subtotal),
+              })}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="fullName">Recipient name</Label>
+              <Label htmlFor="fullName">{t("cart.recipient")}</Label>
               <Input
                 id="fullName"
                 value={fullName}
@@ -255,7 +257,7 @@ export default function Cart() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="address">Shipping address</Label>
+              <Label htmlFor="address">{t("cart.address")}</Label>
               <Textarea
                 id="address"
                 value={address}
@@ -271,14 +273,16 @@ export default function Cart() {
               onClick={() => setCheckoutOpen(false)}
               disabled={placing}
             >
-              Cancel
+              {t("cart.cancel")}
             </Button>
             <Button
               onClick={handlePlaceOrder}
               disabled={placing || fullName.trim().length < 2 || address.trim().length < 8}
             >
               {placing && <Loader2 className="size-4 animate-spin" />}
-              {placing ? "Placing order…" : `Place order · ${formatPrice(subtotal)}`}
+              {placing
+                ? t("cart.placing")
+                : t("cart.placeOrder", { total: formatPrice(subtotal) })}
             </Button>
           </DialogFooter>
         </DialogContent>

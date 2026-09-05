@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
+import { categoryName, useI18n } from "@/lib/i18n";
 import { formatPrice } from "@/lib/format";
 import {
   ArrowLeft,
@@ -39,6 +40,7 @@ export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { lang, t } = useI18n();
   const [quantity, setQuantity] = useState(1);
 
   const product = useQuery(
@@ -70,12 +72,12 @@ export default function ProductDetail() {
   const handleToggleFavorite = () => {
     if (!id) return;
     if (!isAuthenticated) {
-      toast.error("Sign in to save favorites.");
+      toast.error(t("toast.fav.signin"));
       return;
     }
     toggleFavorite({ productId: id as Id<"products"> })
       .then((now) =>
-        toast.success(now ? "Saved to favorites" : "Removed from favorites"),
+        toast.success(now ? t("toast.fav.added") : t("toast.fav.removed")),
       )
       .catch((err: Error) => toast.error(err.message));
   };
@@ -87,7 +89,7 @@ export default function ProductDetail() {
       return;
     }
     addToCart({ productId: id as Id<"products">, quantity })
-      .then(() => toast.success("Added to your bag"))
+      .then(() => toast.success(t("toast.bag.added")))
       .catch((err: Error) => toast.error(err.message));
   };
 
@@ -95,7 +97,7 @@ export default function ProductDetail() {
   const maxQty = product && product !== null ? Math.max(product.stock, 1) : 1;
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-background bg-paper">
       <SiteHeader />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
         <button
@@ -103,7 +105,7 @@ export default function ProductDetail() {
           onClick={() => navigate(-1)}
           className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
-          <ArrowLeft className="size-4" /> Back
+          <ArrowLeft className="size-4" /> {t("pd.back")}
         </button>
 
         {product === undefined && (
@@ -121,13 +123,11 @@ export default function ProductDetail() {
         {product === null && (
           <div className="mt-16 flex flex-col items-center gap-3 rounded-xl border border-dashed border-border bg-card py-16 text-center">
             <p className="font-display text-lg font-semibold">
-              This piece is no longer listed
+              {t("pd.gone.title")}
             </p>
-            <p className="text-sm text-muted-foreground">
-              It may have sold out or been retired by the maker.
-            </p>
+            <p className="text-sm text-muted-foreground">{t("pd.gone.body")}</p>
             <Button asChild size="sm">
-              <Link to="/shop">Back to the marketplace</Link>
+              <Link to="/shop">{t("pd.gone.cta")}</Link>
             </Button>
           </div>
         )}
@@ -144,10 +144,10 @@ export default function ProductDetail() {
 
             <div className="flex flex-col">
               <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                <span>{product.category}</span>
+                <span>{categoryName(product.category, lang)}</span>
                 <ChevronRight className="size-3" />
                 <span>
-                  {product.madeToOrder ? "Made to order" : "Ready to ship"}
+                  {product.madeToOrder ? t("card.madeToOrder") : t("pd.readyToShip")}
                 </span>
               </div>
 
@@ -161,7 +161,7 @@ export default function ProductDetail() {
                 </span>
                 {product.stock > 0 && product.stock <= 3 && (
                   <span className="text-sm font-medium text-primary">
-                    Only {product.stock} left
+                    {t("card.onlyLeft", { count: product.stock })}
                   </span>
                 )}
               </div>
@@ -192,7 +192,7 @@ export default function ProductDetail() {
                     </p>
                   </div>
                   <span className="shrink-0 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
-                    Visit studio →
+                    {t("pd.maker.visit")}
                   </span>
                 </Link>
               )}
@@ -238,14 +238,12 @@ export default function ProductDetail() {
                   </div>
                   {soldOut ? (
                     <span className="text-sm font-medium text-muted-foreground">
-                      Sold out
+                      {t("card.soldOut")}
                     </span>
                   ) : (
                     <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Hand className="size-3.5" />
-                      {product.madeToOrder
-                        ? "Made for you after ordering"
-                        : "Ships within a few days"}
+                      {product.madeToOrder ? t("pd.madeForYou") : t("pd.shipsSoon")}
                     </span>
                   )}
                 </div>
@@ -258,12 +256,12 @@ export default function ProductDetail() {
                     onClick={handleAddToCart}
                   >
                     <ShoppingBag className="size-4" />
-                    {soldOut ? "Sold out" : "Add to bag"}
+                    {soldOut ? t("card.soldOut") : t("pd.addToBag")}
                   </Button>
                   <Button
                     size="lg"
                     variant="outline"
-                    aria-label="Toggle favorite"
+                    aria-label={t("card.fav.add")}
                     className={cn(
                       "size-12 rounded-full p-0",
                       favorited && "border-primary/50 text-primary",
@@ -282,10 +280,10 @@ export default function ProductDetail() {
           <section className="mt-16 border-t border-border/70 pt-10">
             <div className="flex items-end justify-between">
               <h2 className="font-display text-2xl font-semibold tracking-tight">
-                More from {makerShop.shopName}
+                {t("pd.more", { name: makerShop.shopName })}
               </h2>
               <Button asChild variant="ghost" size="sm" className="text-primary hover:text-primary">
-                <Link to={`/maker/${makerShop._id}`}>Visit studio</Link>
+                <Link to={`/maker/${makerShop._id}`}>{t("pd.maker.visit")}</Link>
               </Button>
             </div>
             <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">

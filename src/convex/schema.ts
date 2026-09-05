@@ -7,23 +7,25 @@ export const ROLES = {
   ADMIN: "admin",
   USER: "user",
   MEMBER: "member",
+  ARTISAN: "artisan",
 } as const;
 
 export const roleValidator = v.union(
   v.literal(ROLES.ADMIN),
   v.literal(ROLES.USER),
   v.literal(ROLES.MEMBER),
+  v.literal(ROLES.ARTISAN),
 );
 export type Role = Infer<typeof roleValidator>;
 
 export const PRODUCT_CATEGORIES = [
-  "Ceramics",
-  "Textiles",
-  "Woodwork",
+  "Pottery & Terracotta",
+  "Handloom Textiles",
+  "Block Printing",
   "Jewelry",
-  "Leather",
-  "Prints",
-  "Candles",
+  "Woodwork",
+  "Metalwork",
+  "Bamboo & Cane",
 ] as const;
 
 export const categoryValidator = v.union(
@@ -45,11 +47,12 @@ const schema = defineSchema(
       email: v.optional(v.string()), // email of the user. do not remove
       emailVerificationTime: v.optional(v.number()), // email verification time. do not remove
       isAnonymous: v.optional(v.boolean()), // is the user anonymous. do not remove
+      phone: v.optional(v.string()), // artisan phone number (OTP verified)
 
       role: v.optional(roleValidator), // role of the user. do not remove
     }).index("email", ["email"]), // index for the email. do not remove or modify
 
-    // ---------- Handmade Direct ----------
+    // ---------- कारीgari ----------
 
     // A maker profile; seeded demo makers have no user, studio owners do.
     makers: defineTable({
@@ -57,7 +60,7 @@ const schema = defineSchema(
       shopName: v.string(),
       bio: v.string(),
       location: v.string(),
-      craft: v.string(), // primary craft, e.g. "Ceramics"
+      craft: v.string(), // primary craft, e.g. "Pottery & Terracotta"
       story: v.string(),
       image: v.optional(v.string()), // portrait/avatar URL
       coverImage: v.optional(v.string()),
@@ -72,7 +75,7 @@ const schema = defineSchema(
       title: v.string(),
       description: v.string(),
       category: categoryValidator,
-      price: v.number(), // in dollars
+      price: v.number(), // in rupees
       imageUrl: v.string(),
       materials: v.array(v.string()),
       madeToOrder: v.boolean(),
@@ -123,6 +126,14 @@ const schema = defineSchema(
     })
       .index("by_orderId", ["orderId"])
       .index("by_makerId", ["makerId"]),
+
+    // Phone OTP codes for the artisan sign-up flow (demo SMS).
+    phoneOtps: defineTable({
+      phone: v.string(),
+      code: v.string(),
+      expiresAt: v.number(),
+      used: v.boolean(),
+    }).index("by_phone", ["phone"]),
   },
   {
     schemaValidation: false,
