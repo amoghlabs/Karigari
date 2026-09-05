@@ -13,6 +13,13 @@ import "./index.css";
 const Landing = lazy(() => import("./pages/Landing.tsx"));
 const AuthPage = lazy(() => import("./pages/Auth.tsx"));
 const Dashboard = lazy(() => import("./pages/Dashboard.tsx"));
+const Shop = lazy(() => import("./pages/Shop.tsx"));
+const ProductDetail = lazy(() => import("./pages/ProductDetail.tsx"));
+const MakerStorefront = lazy(() => import("./pages/MakerStorefront.tsx"));
+const Cart = lazy(() => import("./pages/Cart.tsx"));
+const Orders = lazy(() => import("./pages/Orders.tsx"));
+const Favorites = lazy(() => import("./pages/Favorites.tsx"));
+const Studio = lazy(() => import("./pages/Studio.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
 // Simple loading fallback for route transitions
@@ -129,6 +136,41 @@ createRoot(document.getElementById("root")!).render(
                 element={
                   <RequireAuth>
                     <Dashboard />
+                  </RequireAuth>
+                }
+              />
+              <Route path="/shop" element={<Shop />} />
+              <Route path="/product/:id" element={<ProductDetail />} />
+              <Route path="/maker/:id" element={<MakerStorefront />} />
+              <Route
+                path="/cart"
+                element={
+                  <RequireAuth>
+                    <Cart />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/orders"
+                element={
+                  <RequireAuth>
+                    <Orders />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/favorites"
+                element={
+                  <RequireAuth>
+                    <Favorites />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/studio"
+                element={
+                  <RequireAuth>
+                    <Studio />
                   </RequireAuth>
                 }
               />
