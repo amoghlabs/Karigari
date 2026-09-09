@@ -28,6 +28,7 @@ import { categoryName, useI18n, type Lang } from "@/lib/i18n";
 import { formatPrice } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
 import { useSpeechRecognition } from "@/hooks/use-speech";
+import { analyzePhotoFile, enhancePhotoFile, type MeasuredPhoto } from "@/lib/photoAnalysis";
 import {
   ArrowLeft,
   ArrowRight,
@@ -58,6 +59,7 @@ type Maker = {
   bio: string;
   location: string;
   craft: string;
+  crafts?: string[];
   story: string;
 };
 
@@ -72,6 +74,9 @@ type Listing = {
   madeToOrder: boolean;
   stock: number;
   isActive: boolean;
+  colors?: string[];
+  dimensions?: string;
+  tags?: string[];
 };
 
 /* ------------------------------------------------------------------ */
@@ -97,17 +102,31 @@ function usePhoto() {
   const [uploading, setUploading] = useState(false);
   const [storageId, setStorageId] = useState<Id<"_storage"> | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [measured, setMeasured] = useState<MeasuredPhoto | null>(null);
+  const [enhancing, setEnhancing] = useState(false);
+  const [enhanced, setEnhanced] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const fileRef = useRef<File | null>(null);
+  const enhancedFileRef = useRef<File | null>(null);
+
+  const uploadAsStorage = async (file: File) => {
+    const url = await getUploadUrl();
+    const id = await uploadPhoto(url, file);
+    setStorageId(id);
+  };
 
   const pick = async (file: File | undefined) => {
     if (!file) return;
     setUploading(true);
     try {
-      const url = await getUploadUrl();
-      const id = await uploadPhoto(url, file);
-      setStorageId(id);
-      const objectUrl = URL.createObjectURL(file);
-      setPreview(objectUrl);
+      // Measure the REAL pixels first — Smart Cataloguing consumes this.
+      const analysis = await analyzePhotoFile(file);
+      fileRef.current = file;
+      enhancedFileRef.current = null;
+      setMeasured(analysis);
+      setEnhanced(false);
+      setPreview(URL.createObjectURL(file));
+      await uploadAsStorage(file);
       toast.success("Photo ready");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed.");
@@ -116,9 +135,38 @@ function usePhoto() {
     }
   };
 
+  /** Photo Enhancer: auto-exposure + gentle contrast + vibrance + white-balance
+   * guard on the actual pixels, then re-uploads the improved photo. */
+  const enhance = async () => {
+    const file = enhancedFileRef.current ?? fileRef.current;
+    if (!file) return;
+    setEnhancing(true);
+    try {
+      const { objectUrl, enhancedFile } = await enhancePhotoFile(
+        file,
+        measured?.brightness ?? 50,
+      );
+      enhancedFileRef.current = enhancedFile;
+      setPreview(objectUrl);
+      setEnhanced(true);
+      const analysis = await analyzePhotoFile(enhancedFile);
+      setMeasured(analysis);
+      await uploadAsStorage(enhancedFile);
+      toast.success("Photo enhanced");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Enhance failed.");
+    } finally {
+      setEnhancing(false);
+    }
+  };
+
   const reset = () => {
     setStorageId(null);
     setPreview(null);
+    setMeasured(null);
+    setEnhanced(false);
+    fileRef.current = null;
+    enhancedFileRef.current = null;
   };
 
   return {
@@ -128,6 +176,10 @@ function usePhoto() {
     inputRef,
     pick,
     reset,
+    measured,
+    enhance,
+    enhancing,
+    enhanced,
   };
 }
 
@@ -290,7 +342,7 @@ function Onboarding() {
 
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
-  const [craft, setCraft] = useState<string | null>(null);
+  const [crafts, setCrafts] = useState<string[]>([]); // multi-select: one artisan, many crafts
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState<null | {
     story: string;
@@ -303,11 +355,11 @@ function Onboarding() {
   const voiceNote = speech.transcript || typedNote;
 
   const handleGenerate = async () => {
-    if (!craft) return;
+    if (crafts.length === 0) return;
     setGenerating(true);
     try {
       const result = await generateStory({
-        craft,
+        craft: crafts[0],
         name,
         voiceNote: voiceNote || undefined,
       });
@@ -325,12 +377,13 @@ function Onboarding() {
   };
 
   const handleLaunch = async () => {
-    if (!craft || !generated) return;
+    if (crafts.length === 0 || !generated) return;
     setSaving(true);
     try {
       await createMaker({
         shopName: generated.shopName,
-        craft,
+        craft: crafts[0],
+        crafts,
         location: locationInput || "",
         bio: generated.bio,
         story: generated.story,
@@ -392,29 +445,36 @@ function Onboarding() {
         </div>
       )}
 
-      {/* Step 2 — craft tap grid */}
+      {/* Step 2 — craft tap grid (multi-select: one artisan, many crafts) */}
       {step === 2 && (
         <div className="mt-8">
           <h1 className="font-display text-3xl font-semibold tracking-tight">
             {t("ob.craft.title")}
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">{t("ob.craft.sub")}</p>
+          <p className="mt-2 text-sm text-muted-foreground">{t("ob.craft.subMulti")}</p>
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {PRODUCT_CATEGORIES.map((c) => (
               <button
                 key={c}
                 type="button"
-                onClick={() => {
-                  setCraft(c);
-                  setStep(3);
-                }}
+                aria-pressed={crafts.includes(c)}
+                onClick={() =>
+                  setCrafts((prev) =>
+                    prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c],
+                  )
+                }
                 className={cn(
-                  "tap-lg flex flex-col items-center gap-2 rounded-2xl border p-5 text-center shadow-soft transition-all hover:-translate-y-0.5",
-                  craft === c
+                  "tap-lg relative flex flex-col items-center gap-2 rounded-2xl border p-5 text-center shadow-soft transition-all hover:-translate-y-0.5",
+                  crafts.includes(c)
                     ? "border-primary bg-primary/10 text-foreground"
                     : "border-border/70 bg-card hover:border-primary/40",
                 )}
               >
+                {crafts.includes(c) && (
+                  <span className="absolute right-2 top-2 flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                    <Check className="size-3.5" />
+                  </span>
+                )}
                 <span className="text-3xl">{CATEGORY_ICON[c] ?? "🪡"}</span>
                 <span className="text-sm font-semibold">
                   {categoryName(c, lang)}
@@ -422,9 +482,17 @@ function Onboarding() {
               </button>
             ))}
           </div>
-          <div className="mt-4 flex justify-between">
+          <div className="mt-4 flex items-center justify-between gap-2">
             <Button variant="ghost" onClick={() => setStep(1)}>
               <ArrowLeft className="mr-2 size-4" /> {t("ob.back")}
+            </Button>
+            <Button
+              size="lg"
+              className="tap-lg rounded-full text-base"
+              disabled={crafts.length === 0}
+              onClick={() => setStep(3)}
+            >
+              {t("ob.next")} <ArrowRight className="ml-2 size-4" />
             </Button>
           </div>
         </div>
@@ -527,7 +595,7 @@ function Onboarding() {
             <Button
               size="lg"
               className="tap-lg mt-6 w-full rounded-full text-base shadow-soft"
-              disabled={generating || !craft}
+              disabled={generating || crafts.length === 0}
               onClick={handleGenerate}
             >
               {generating && <Loader2 className="mr-2 size-4 animate-spin" />}
@@ -640,6 +708,7 @@ function ListingDialog({
   const createProduct = useMutation(api.studio.createProduct);
   const updateProduct = useMutation(api.studio.updateProduct);
   const generateListingCopy = useAction(api.aiStory.generateListingCopy);
+  const smartCatalogue = useAction(api.aiStory.smartCatalogue);
   const speech = useSpeechRecognition(lang);
   const photo = usePhoto();
 
@@ -652,12 +721,16 @@ function ListingDialog({
     category: listing?.category ?? makerCraft,
     price: listing?.price?.toString() ?? "",
     materials: listing?.materials.join(", ") ?? "",
+    colors: listing?.colors?.join(", ") ?? "",
+    dimensions: listing?.dimensions ?? "",
+    tags: listing?.tags?.join(", ") ?? "",
     madeToOrder: listing?.madeToOrder ?? true,
     stock: listing?.stock?.toString() ?? "1",
     isActive: listing?.isActive ?? true,
   }));
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [cataloguing, setCataloguing] = useState(false);
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
@@ -684,6 +757,56 @@ function ListingDialog({
     }
   };
 
+  /** Smart Cataloguing: fills name/category/materials/colors/dimensions/tags/
+   * description from the artisan's ACTUAL voice transcript + photo pixels. */
+  const handleSmartCatalogue = async () => {
+    if (!speech.transcript.trim() && !form.title.trim() && !photo.measured?.ok) {
+      toast.info(t("ld.smartNeedsInput"));
+      return;
+    }
+    setCataloguing(true);
+    try {
+      const result = await smartCatalogue({
+        craft: form.category,
+        title: form.title || undefined,
+        voiceNote: speech.transcript || undefined,
+        photoAnalysis: photo.measured?.ok
+          ? {
+              ok: true,
+              width: photo.measured.width,
+              height: photo.measured.height,
+              aspect: photo.measured.aspect,
+              brightness: photo.measured.brightness,
+              contrast: photo.measured.contrast,
+              saturation: photo.measured.saturation,
+              colorHexes: photo.measured.colorHexes,
+              light: photo.measured.light,
+            }
+          : undefined,
+      });
+      setForm((f) => ({
+        ...f,
+        title: f.title.trim() || result.name,
+        category: PRODUCT_CATEGORIES.includes(
+          result.category as (typeof PRODUCT_CATEGORIES)[number],
+        )
+          ? result.category
+          : f.category,
+        materials: f.materials.trim() || result.materials.join(", "),
+        colors: f.colors.trim() || result.colors.join(", "),
+        dimensions: f.dimensions.trim() || result.dimensions,
+        tags: f.tags.trim() || result.tags.join(", "),
+        description:
+          f.description.trim() || (lang === "hi" ? result.descriptionHi : result.description),
+      }));
+      toast.success(t("ld.smartDone"));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Cataloguing failed.");
+    } finally {
+      setCataloguing(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -693,9 +816,12 @@ function ListingDialog({
         description: form.description,
         category: form.category as (typeof PRODUCT_CATEGORIES)[number],
         price: Number(form.price) || 0,
-        materials: form.materials.split(",").map((m) => m.trim()),
+        materials: form.materials.split(",").map((m) => m.trim()).filter(Boolean),
         madeToOrder: form.madeToOrder,
         stock: Number(form.stock) || 0,
+        colors: form.colors.split(",").map((c) => c.trim()).filter(Boolean),
+        dimensions: form.dimensions.trim() || undefined,
+        tags: form.tags.split(",").map((tg) => tg.trim()).filter(Boolean),
       };
       if (isEdit && listing) {
         await updateProduct({

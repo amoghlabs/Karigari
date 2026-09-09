@@ -61,6 +61,7 @@ const schema = defineSchema(
       bio: v.string(),
       location: v.string(),
       craft: v.string(), // primary craft, e.g. "Pottery & Terracotta"
+      crafts: v.optional(v.array(v.string())), // all crafts the artisan works across; falls back to [craft]
       story: v.string(),
       image: v.optional(v.string()), // portrait/avatar URL
       coverImage: v.optional(v.string()),
@@ -81,6 +82,9 @@ const schema = defineSchema(
       madeToOrder: v.boolean(),
       stock: v.number(),
       isActive: v.boolean(),
+      colors: v.optional(v.array(v.string())), // from Smart Cataloguing
+      dimensions: v.optional(v.string()), // from Smart Cataloguing
+      tags: v.optional(v.array(v.string())), // from Smart Cataloguing
       daysAgo: v.optional(v.number()), // lower = newer; drives the "new arrivals" sort
     })
       .index("by_makerId", ["makerId"])

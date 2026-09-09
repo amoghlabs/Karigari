@@ -78,8 +78,9 @@ export const demoPlaceOrder = mutation({
 
     const { lines } = await loadPayableLines(ctx, userId);
 
-    // Simulate a gateway round-trip with a short delay, like a real payment.
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    // Convex mutations must be deterministic (no setTimeout/timers), so the
+    // demo gateway completes immediately — the client shows the pay spinner
+    // while the mutation round-trips.
     const paymentId = `demo_${method}_${Date.now().toString(36)}`;
 
     const result = await finalizeOrder(ctx, {

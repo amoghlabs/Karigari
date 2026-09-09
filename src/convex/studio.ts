@@ -21,6 +21,7 @@ export const createMaker = mutation({
   args: {
     shopName: v.string(),
     craft: v.string(),
+    crafts: v.optional(v.array(v.string())),
     location: v.string(),
     bio: v.string(),
     story: v.string(),
@@ -41,6 +42,13 @@ export const createMaker = mutation({
       .first();
     if (existing) throw new Error("You already have a studio.");
 
+    // One studio, many crafts: keep every selected craft, with the first as
+    // primary. Unknown categories are dropped; none-valid keeps the primary.
+    const validCrafts = Array.from(
+      new Set([args.craft, ...(args.crafts ?? [])]),
+    ).filter((c) => CATEGORIES.includes(c));
+    const crafts = validCrafts.length > 0 ? validCrafts : [args.craft];
+
     const storedImage = args.imageStorageId
       ? await ctx.storage.getUrl(args.imageStorageId)
       : undefined;
@@ -49,7 +57,8 @@ export const createMaker = mutation({
     return ctx.db.insert("makers", {
       userId,
       shopName,
-      craft: args.craft,
+      craft: crafts[0],
+      crafts,
       location: args.location.trim() || "Somewhere handmade",
       bio: args.bio.trim() || shopName,
       story: args.story.trim() || shopName,
@@ -66,6 +75,7 @@ export const updateMaker = mutation({
     makerId: v.id("makers"),
     shopName: v.string(),
     craft: v.string(),
+    crafts: v.optional(v.array(v.string())),
     location: v.string(),
     bio: v.string(),
     story: v.string(),
@@ -78,9 +88,16 @@ export const updateMaker = mutation({
     if (!maker) throw new Error("Studio not found.");
     if (maker.userId !== userId) throw new Error("Not your studio.");
 
+    // Same multi-craft normalization as createMaker.
+    const validCrafts = Array.from(
+      new Set([args.craft, ...(args.crafts ?? [])]),
+    ).filter((c) => CATEGORIES.includes(c));
+    const crafts = validCrafts.length > 0 ? validCrafts : [maker.craft];
+
     await ctx.db.patch(args.makerId, {
       shopName: args.shopName.trim() || maker.shopName,
-      craft: args.craft,
+      craft: crafts[0],
+      crafts,
       location: args.location.trim() || maker.location,
       bio: args.bio.trim() || maker.bio,
       story: args.story.trim() || maker.story,
@@ -110,7 +127,10 @@ export const myListings = query({
       .collect();
     products.sort((a, b) => b._creationTime - a._creationTime);
 
-    return { maker, products };
+    return {
+      maker: { ...maker, crafts: maker.crafts ?? [maker.craft] },
+      products,
+    };
   },
 });
 
@@ -126,6 +146,9 @@ export const createProduct = mutation({
     materials: v.array(v.string()),
     madeToOrder: v.boolean(),
     stock: v.number(),
+    colors: v.optional(v.array(v.string())),
+    dimensions: v.optional(v.string()),
+    tags: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -157,6 +180,9 @@ export const createProduct = mutation({
       madeToOrder: args.madeToOrder,
       stock: Math.max(0, Math.round(args.stock)),
       isActive: true,
+      colors: args.colors?.filter((c) => c.trim().length > 0),
+      dimensions: args.dimensions?.trim() || undefined,
+      tags: args.tags?.filter((t) => t.trim().length > 0),
     });
   },
 });
@@ -175,6 +201,9 @@ export const updateProduct = mutation({
     madeToOrder: v.boolean(),
     stock: v.number(),
     isActive: v.boolean(),
+    colors: v.optional(v.array(v.string())),
+    dimensions: v.optional(v.string()),
+    tags: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -205,6 +234,13 @@ export const updateProduct = mutation({
       madeToOrder: args.madeToOrder,
       stock: Math.max(0, Math.round(args.stock)),
       isActive: args.isActive,
+      ...(args.colors !== undefined
+        ? { colors: args.colors.filter((c) => c.trim().length > 0) }
+        : {}),
+      ...(args.dimensions !== undefined
+        ? { dimensions: args.dimensions.trim() || undefined }
+        : {}),
+      ...(args.tags !== undefined ? { tags: args.tags.filter((t) => t.trim().length > 0) } : {}),
     });
     return { ok: true };
   },
