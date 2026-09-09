@@ -1,5 +1,6 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
+import type { Doc } from "./_generated/dataModel";
 
 export const SORT_OPTIONS = [
   "featured",
@@ -22,6 +23,15 @@ export const listProducts = query({
       .query("products")
       .withIndex("by_active", (q) => q.eq("isActive", true))
       .collect();
+
+    // Featured studios rank first for the default "featured" sort.
+    const featuredMakers = await ctx.db
+      .query("makers")
+      .withIndex("by_featured", (q) => q.eq("isFeatured", true))
+      .collect();
+    const makerRank = new Map(
+      featuredMakers.map((m, i) => [m._id, i] as const),
+    );
 
     if (args.category && args.category !== "All") {
       products = products.filter((p) => p.category === args.category);
@@ -46,11 +56,24 @@ export const listProducts = query({
     if (sort === "price-asc") products.sort((a, b) => a.price - b.price);
     else if (sort === "price-desc") products.sort((a, b) => b.price - a.price);
     else if (sort === "newest")
-      products.sort((a, b) => b._creationTime - a._creationTime);
-    else
+      // Seed products carry a daysAgo stamp (lower = newer); anything
+      // artisan-added falls back to creation time.
       products.sort(
-        (a, b) => a._creationTime - b._creationTime, // featured = catalog order
+        (a, b) =>
+          (a.daysAgo ?? 999) - (b.daysAgo ?? 999) ||
+          b._creationTime - a._creationTime,
       );
+    else
+      // Featured: studios first (by maker.isFeatured), then newest first.
+      products.sort((a, b) => {
+        const makerA = makerRank.get(a.makerId) ?? 1;
+        const makerB = makerRank.get(b.makerId) ?? 1;
+        if (makerA !== makerB) return makerA - makerB;
+        return (
+          (a.daysAgo ?? 999) - (b.daysAgo ?? 999) ||
+          b._creationTime - a._creationTime
+        );
+      });
 
     const slice = products.slice(0, args.limit ?? products.length);
     return Promise.all(
@@ -59,6 +82,43 @@ export const listProducts = query({
         maker: await ctx.db.get(product.makerId),
       })),
     );
+  },
+});
+
+/**
+ * Rails for the shop home: newest arrivals and handpicked pieces, both
+ * joined with their maker. One round-trip instead of several listProducts
+ * calls.
+ */
+export const getShopRails = query({
+  handler: async (ctx) => {
+    const all = await ctx.db
+      .query("products")
+      .withIndex("by_active", (q) => q.eq("isActive", true))
+      .collect();
+
+    const makerCache = new Map<string, Doc<"makers"> | null>();
+    const joinMaker = async (product: (typeof all)[number]) => {
+      let maker = makerCache.get(product.makerId as string);
+      if (!maker) {
+        maker = await ctx.db.get(product.makerId);
+        if (maker) makerCache.set(product.makerId as string, maker);
+      }
+      return { ...product, maker };
+    };
+
+    const withMakers = await Promise.all(all.map(joinMaker));
+    const byNewest = (a: (typeof withMakers)[number], b: (typeof withMakers)[number]) =>
+      (a.daysAgo ?? 999) - (b.daysAgo ?? 999) ||
+      b._creationTime - a._creationTime;
+
+    const newArrivals = [...withMakers].sort(byNewest).slice(0, 8);
+    const featured = withMakers
+      .filter((p) => p.maker?.isFeatured === true)
+      .sort(byNewest)
+      .slice(0, 8);
+
+    return { newArrivals, featured };
   },
 });
 

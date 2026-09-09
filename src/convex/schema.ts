@@ -81,6 +81,7 @@ const schema = defineSchema(
       madeToOrder: v.boolean(),
       stock: v.number(),
       isActive: v.boolean(),
+      daysAgo: v.optional(v.number()), // lower = newer; drives the "new arrivals" sort
     })
       .index("by_makerId", ["makerId"])
       .index("by_active", ["isActive"])
@@ -113,6 +114,8 @@ const schema = defineSchema(
       fullName: v.string(),
       address: v.string(),
       createdAt: v.number(),
+      paymentId: v.optional(v.string()), // gateway payment id (or demo id)
+      paymentMethod: v.optional(v.string()), // "upi" | "card" | "razorpay" | "demoSale"
     }).index("by_userId", ["userId"]),
 
     orderItems: defineTable({

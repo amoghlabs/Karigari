@@ -65,16 +65,23 @@ function Hero() {
           transition={{ duration: 0.55, delay: 0.08 }}
           className="mt-6 max-w-3xl font-display text-4xl font-semibold leading-[1.12] tracking-tight sm:text-6xl"
         >
-          {t("hero.title1")}
-          <br />
-          <span className="text-primary italic">{t("hero.title2")}</span>
+          {t("hero.slogan")}
         </motion.h1>
 
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, delay: 0.16 }}
-          className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg"
+          transition={{ duration: 0.55, delay: 0.14 }}
+          className="mt-5 font-display text-lg italic text-primary sm:text-xl"
+        >
+          {t("hero.slogan.sub")}
+        </motion.p>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, delay: 0.2 }}
+          className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg"
         >
           {t("hero.subtitle")}
         </motion.p>

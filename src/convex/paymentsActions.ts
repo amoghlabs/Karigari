@@ -20,7 +20,15 @@ export const createRazorpayOrderAction = action({
     fullName: v.string(),
     address: v.string(),
   },
-  handler: async (ctx, { fullName, address }) => {
+  handler: async (
+    ctx,
+    { fullName, address },
+  ): Promise<{
+    rzpOrderId: string;
+    amountPaise: number;
+    keyId: string;
+    count: number;
+  }> => {
     const userId = await getAuthUserId(ctx);
     if (userId === null) throw new Error("Sign in to check out.");
 
@@ -29,10 +37,11 @@ export const createRazorpayOrderAction = action({
     if (name.length < 2) throw new Error("Please add the recipient name.");
     if (addr.length < 8) throw new Error("Please add a shipping address.");
 
-    const { lines, subtotal, count } = await ctx.runQuery(
+    const payable = await ctx.runQuery(
       internal.paymentsInternal.getPayableCart,
       {},
     );
+    const { lines, subtotal, count } = payable;
     const amountPaise = subtotal * 100;
     const receipt = `kg_${Date.now()}_${Math.floor(Math.random() * 1e5)}`;
 
@@ -70,7 +79,14 @@ export const verifyRazorpayPayment = action({
     rzpPaymentId: v.string(),
     rzpSignature: v.string(),
   },
-  handler: async (ctx, { rzpOrderId, rzpPaymentId, rzpSignature }) => {
+  handler: async (
+    ctx,
+    { rzpOrderId, rzpPaymentId, rzpSignature },
+  ): Promise<{
+    orderId: string;
+    total: number;
+    paymentId: string;
+  }> => {
     const userId = await getAuthUserId(ctx);
     if (userId === null) throw new Error("Sign in to check out.");
 

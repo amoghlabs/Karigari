@@ -51,9 +51,19 @@ export function ProductCard({
               src={product.imageUrl}
               alt={product.title}
               loading="lazy"
-              className="aspect-square w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+              className="aspect-[4/5] w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
             />
           </Link>
+          {onAddToCart && product.stock > 0 && (
+            <button
+              type="button"
+              onClick={() => onAddToCart(product._id)}
+              className="absolute inset-x-3 bottom-3 hidden translate-y-2 items-center justify-center gap-1.5 rounded-full bg-background/95 py-2.5 text-sm font-semibold text-foreground opacity-0 shadow-soft backdrop-blur transition-all duration-300 hover:bg-primary hover:text-primary-foreground group-hover:translate-y-0 group-hover:opacity-100 sm:flex"
+            >
+              <Plus className="size-4" />
+              {t("card.addToBag")}
+            </button>
+          )}
           {onToggleFavorite && (
             <button
               type="button"
@@ -114,7 +124,7 @@ export function ProductCard({
             <Button
               size="sm"
               variant="outline"
-              className="mt-2 w-full gap-1.5 rounded-full"
+              className="mt-2 w-full gap-1.5 rounded-full sm:hidden"
               onClick={() => onAddToCart(product._id)}
             >
               <Plus className="size-3.5" />

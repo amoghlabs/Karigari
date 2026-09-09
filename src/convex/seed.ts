@@ -74,6 +74,32 @@ const seed: SeedMaker[] = [
         madeToOrder: true,
         stock: 8,
       },
+      {
+        title: "Terracotta Planter Trio",
+        description:
+          "Three hand-pressed terracotta planters in graduating sizes, unglazed on the outside so the clay can breathe and the roots stay cool. Pressed by hand, sun-dried and wood-fired like every piece from our courtyard.",
+        category: "Pottery & Terracotta",
+        price: 1200,
+        imageUrl:
+          "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=800&h=800&fit=crop",
+        materials: ["River clay", "Natural slip"],
+        madeToOrder: true,
+        stock: 14,
+        daysAgo: 2,
+      },
+      {
+        title: "Hand-Thrown Clay Mugs (Set of 2)",
+        description:
+          "Thick-walled clay mugs thrown in one piece, the kind that keeps chai hot right to the last sip. The thumb-print of the wheel is left on each handle — no two sit in the hand the same way.",
+        category: "Pottery & Terracotta",
+        price: 1100,
+        imageUrl:
+          "https://images.unsplash.com/photo-1590947132387-155cc02f3212?w=800&h=800&fit=crop",
+        materials: ["River clay", "Natural glaze"],
+        madeToOrder: false,
+        stock: 18,
+        daysAgo: 6,
+      },
     ],
   },
   {
@@ -124,6 +150,32 @@ const seed: SeedMaker[] = [
         materials: ["Tussar silk", "Hand-knotted fringe"],
         madeToOrder: false,
         stock: 12,
+      },
+      {
+        title: "Banarasi Silk Stole",
+        description:
+          "A deep-bordered Banarasi stole in handloom silk, the border threaded separately and woven in so it never frays. Draped over a shoulder or folded at the waist, it is unmistakably Banaras.",
+        category: "Handloom Textiles",
+        price: 2900,
+        imageUrl:
+          "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=800&h=800&fit=crop",
+        materials: ["Banarasi silk", "Handloom weave"],
+        madeToOrder: true,
+        stock: 6,
+        daysAgo: 1,
+      },
+      {
+        title: "Handloom Cotton Bedspread",
+        description:
+          "A generous handloom cotton bedspread in natural dyes, woven on our family looms and washed soft before it leaves the house. Cool in summer, warm in winter — the cloth does both.",
+        category: "Handloom Textiles",
+        price: 4200,
+        imageUrl:
+          "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=800&h=800&fit=crop",
+        materials: ["Hand-spun cotton", "Natural dyes"],
+        madeToOrder: true,
+        stock: 4,
+        daysAgo: 5,
       },
     ],
   },
@@ -176,6 +228,32 @@ const seed: SeedMaker[] = [
         madeToOrder: true,
         stock: 7,
       },
+      {
+        title: "Ajrakh Cotton Scarf",
+        description:
+          "A soft cotton scarf printed with the old ajrakh star-and-river border, dipped in our living indigo vat and boiled with madder for colour. Wear it, gift it, keep it — it only softens with use.",
+        category: "Block Printing",
+        price: 1600,
+        imageUrl:
+          "https://images.unsplash.com/photo-1618220179428-22790b461013?w=800&h=800&fit=crop",
+        materials: ["Cotton", "Natural indigo & madder"],
+        madeToOrder: false,
+        stock: 12,
+        daysAgo: 3,
+      },
+      {
+        title: "Sanganeri Block-Print Tablecloth",
+        description:
+          "A full-size tablecloth printed with fine Sanganeri floral blocks in indigo and turmeric on washed cotton. The hand-pressed blocks leave a tiny unevenness that no machine print can copy.",
+        category: "Block Printing",
+        price: 1500,
+        imageUrl:
+          "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&h=800&fit=crop",
+        materials: ["Cotton", "Hand-carved teak blocks"],
+        madeToOrder: false,
+        stock: 10,
+        daysAgo: 8,
+      },
     ],
   },
   {
@@ -223,9 +301,35 @@ const seed: SeedMaker[] = [
         price: 4800,
         imageUrl:
           "https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=800&h=800&fit=crop",
-        materials: ["23k gold sheet", "Coloured glass"],
+        materials: ["23k gold foil", "Coloured glass"],
         madeToOrder: true,
         stock: 4,
+      },
+      {
+        title: "Kundan Bangle Set",
+        description:
+          "A pair of kundan bangles, stones seated in gold foil the traditional way with a soft enamel back. Built up bead by bead under the loupe, sized to slip on and stay on.",
+        category: "Jewelry",
+        price: 3800,
+        imageUrl:
+          "https://images.unsplash.com/photo-1615529182904-14819c35db37?w=800&h=800&fit=crop",
+        materials: ["22k gold foil", "Kundan stones", "Meenakari enamel"],
+        madeToOrder: true,
+        stock: 3,
+        daysAgo: 4,
+      },
+      {
+        title: "Silver Filigree Earrings",
+        description:
+          "Featherlight earrings in hand-worked silver filigree — wire drawn, twisted and soldered in the karkhana style. Delicate enough for daily wear, bright enough for a festival.",
+        category: "Jewelry",
+        price: 1500,
+        imageUrl:
+          "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=800&h=800&fit=crop",
+        materials: ["Sterling silver"],
+        madeToOrder: false,
+        stock: 9,
+        daysAgo: 9,
       },
     ],
   },
@@ -278,6 +382,32 @@ const seed: SeedMaker[] = [
         madeToOrder: true,
         stock: 3,
       },
+      {
+        title: "Carved Mango Wood Spice Box",
+        description:
+          "A round masala dabba hollowed from a single piece of mango wood, with four snug cups and a hand-carved lid. The chisel path is left visible — this is a forest-carver's box, not a factory one.",
+        category: "Woodwork",
+        price: 1800,
+        imageUrl:
+          "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=800&fit=crop",
+        materials: ["Mango wood", "Natural oil finish"],
+        madeToOrder: true,
+        stock: 7,
+        daysAgo: 3,
+      },
+      {
+        title: "Hand-Carved Teak Spoons (Set of 3)",
+        description:
+          "Three serving spoons carved from seasoned teak in the old Bundelkhand shapes — one long, one round, one for the kadhai's depth. Oiled and food-safe, they grow darker and smoother with every use.",
+        category: "Woodwork",
+        price: 950,
+        imageUrl:
+          "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=800&h=800&fit=crop",
+        materials: ["Teak", "Food-safe oil"],
+        madeToOrder: false,
+        stock: 20,
+        daysAgo: 10,
+      },
     ],
   },
   {
@@ -328,6 +458,32 @@ const seed: SeedMaker[] = [
         materials: ["Brass", "Cotton cord"],
         madeToOrder: true,
         stock: 4,
+      },
+      {
+        title: "Dhokra Temple Bell",
+        description:
+          "A small dhokra temple bell cast by the lost-wax method — the clapper is a separate casting, the tone deep and true. Ring it at the door, or hang it where you keep your prayers.",
+        category: "Metalwork",
+        price: 1700,
+        imageUrl:
+          "https://images.unsplash.com/photo-1522735338363-cc7313be0ae0?w=800&h=800&fit=crop",
+        materials: ["Brass", "Lost-wax casting"],
+        madeToOrder: false,
+        stock: 8,
+        daysAgo: 2,
+      },
+      {
+        title: "Brass Diya Stand",
+        description:
+          "A hand-cast brass diya stand with a flared oil cup and a raised wick lip, polished to a soft glow. One diya of oil burns here for a full evening aarti.",
+        category: "Metalwork",
+        price: 1100,
+        imageUrl:
+          "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=800&h=800&fit=crop",
+        materials: ["Brass"],
+        madeToOrder: false,
+        stock: 15,
+        daysAgo: 7,
       },
     ],
   },
@@ -380,6 +536,32 @@ const seed: SeedMaker[] = [
         madeToOrder: true,
         stock: 6,
       },
+      {
+        title: "Bamboo Lamp Shade",
+        description:
+          "A hand-woven bamboo lamp shade that throws a soft, freckled light across the room. Split cane over a bamboo frame, woven while supple — no two shades cast the same shadow.",
+        category: "Bamboo & Cane",
+        price: 2400,
+        imageUrl:
+          "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&h=800&fit=crop",
+        materials: ["Bamboo", "Rattan cane"],
+        madeToOrder: true,
+        stock: 5,
+        daysAgo: 1,
+      },
+      {
+        title: "Cane Serving Tray",
+        description:
+          "A wide cane tray with a bamboo rim, woven tight enough to carry a full set of glasses or the evening chai. Handles are carved from a single bend of bamboo.",
+        category: "Bamboo & Cane",
+        price: 1300,
+        imageUrl:
+          "https://images.unsplash.com/photo-1553413077-190dd305871c?w=800&h=800&fit=crop",
+        materials: ["Rattan cane", "Bamboo frame"],
+        madeToOrder: false,
+        stock: 9,
+        daysAgo: 5,
+      },
     ],
   },
 ];
@@ -394,6 +576,20 @@ const seed: SeedMaker[] = [
 export const seedCatalog = internalMutation({
   args: {},
   handler: async (ctx) => {
+    // If the catalog is already current (every seed title present), leave it
+    // alone — refreshing on every landing mount would orphan carts and
+    // favorites that reference the previous seed's product ids.
+    const expectedTitles = new Set(
+      seed.flatMap((m) => m.products.map((p) => p.title)),
+    );
+    const existing = await ctx.db.query("products").collect();
+    const present = new Set(existing.map((p) => p.title));
+    let missing = 0;
+    for (const title of expectedTitles) {
+      if (!present.has(title)) missing += 1;
+    }
+    if (missing === 0) return;
+
     // Remove previously seeded catalog rows (seed makers have no userId),
     // keeping user-created studios and their products intact.
     const existingMakers = await ctx.db.query("makers").collect();

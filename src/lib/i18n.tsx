@@ -37,6 +37,11 @@ const DICT: Dict = {
   "nav.signOut": { en: "Sign out", hi: "साइन आउट" },
 
   /* Hero */
+  "hero.slogan": { en: "Where every craft has a voice.", hi: "जहाँ हर हुनर की अपनी आवाज़ है।" },
+  "hero.slogan.sub": {
+    en: "From the artisan's hands — and words — straight to you.",
+    hi: "कारीगर के हाथों — और शब्दों — से सीधे आप तक।",
+  },
   "hero.badge": {
     en: "900+ artisan studios · zero middlemen",
     hi: "900+ कारीगर स्टूडियो · कोई बिचौलिया नहीं",
@@ -116,7 +121,11 @@ const DICT: Dict = {
     en: "1 piece from an independent studio",
     hi: "एक स्वतंत्र स्टूडियो से 1 चीज़",
   },
-  "shop.search": { en: "Search pieces, materials…", hi: "चीज़ें, सामग्री खोजें…" },
+  "shop.search": { en: "Search pieces, materials, studios…", hi: "चीज़ें, सामग्री, स्टूडियो खोजें…" },
+  "shop.search.hero": {
+    en: "Find something made by hand",
+    hi: "हाथ से बनी कोई चीज़ खोजें",
+  },
   "shop.sort": { en: "Sort", hi: "क्रम" },
   "shop.sort.featured": { en: "Featured", hi: "प्रमुख" },
   "shop.sort.newest": { en: "Newest", hi: "नई" },
@@ -128,6 +137,21 @@ const DICT: Dict = {
     hi: "कोई और खोज या श्रेणी आज़माएँ — हर हफ़्ते नया काम आता है।",
   },
   "shop.clear": { en: "Clear filters", hi: "फ़िल्टर हटाएँ" },
+  "shop.newArrivals": { en: "New arrivals", hi: "नई आई चीज़ें" },
+  "shop.newArrivals.sub": {
+    en: "Fresh from the studios this week",
+    hi: "इस हफ़्ते स्टूडियो से ताज़ा",
+  },
+  "shop.featuredRail": { en: "Handpicked for you", hi: "आपके लिए चुनी गईं" },
+  "shop.featuredRail.sub": {
+    en: "Studio favourites and bestsellers",
+    hi: "स्टूडियो की पसंदीदा और बेस्टसेलर",
+  },
+  "shop.allRail": { en: "Everything in the market", hi: "बाज़ार की सारी चीज़ें" },
+  "shop.allRail.sub": {
+    en: "All {count} pieces, across every craft",
+    hi: "हर हुनर की सभी {count} चीज़ें",
+  },
 
   /* Product card */
   "card.madeToOrder": { en: "Made to order", hi: "ऑर्डर पर बनाया जाता है" },
@@ -192,11 +216,48 @@ const DICT: Dict = {
     hi: "{count} चीज़ें · {total} — बताइए कहाँ भेजनी हैं।",
   },
   "cart.recipient": { en: "Recipient name", hi: "प्राप्तकर्ता का नाम" },
+  "cart.recipient.invalid": { en: "Please add the recipient name.", hi: "कृपया प्राप्तकर्ता का नाम लिखें।" },
   "cart.address": { en: "Shipping address", hi: "डिलीवरी का पता" },
+  "cart.address.ph": {
+    en: "House no., street, city, PIN",
+    hi: "मकान नंबर, गली, शहर, पिन कोड",
+  },
+  "cart.address.invalid": { en: "Please add a complete shipping address.", hi: "कृपया पूरा डिलीवरी पता लिखें।" },
   "cart.cancel": { en: "Cancel", hi: "रद्द करें" },
   "cart.placeOrder": { en: "Place order · {total}", hi: "ऑर्डर करें · {total}" },
   "cart.placing": { en: "Placing order…", hi: "ऑर्डर हो रहा है…" },
   "cart.ordered": { en: "Order placed — thank you!", hi: "ऑर्डर हो गया — धन्यवाद!" },
+  "cart.method": { en: "Payment method", hi: "भुगतान का तरीका" },
+  "cart.method.sub": { en: "How would you like to pay?", hi: "आप कैसे भुगतान करेंगे?" },
+  "cart.method.upi": { en: "UPI", hi: "UPI" },
+  "cart.method.upi.sub": { en: "GPay, PhonePe, Paytm…", hi: "GPay, PhonePe, Paytm…" },
+  "cart.method.card": { en: "Card", hi: "कार्ड" },
+  "cart.method.card.sub": { en: "Credit / debit card", hi: "क्रेडिट / डेबिट कार्ड" },
+  "cart.continuePay": { en: "Continue to payment", hi: "भुगतान के लिए आगे बढ़ें" },
+  "cart.pay.title": { en: "Complete your payment", hi: "अपना भुगतान पूरा करें" },
+  "cart.pay.sub": {
+    en: "You're paying {total} for {count} pieces.",
+    hi: "आप {count} चीज़ों के लिए {total} भुगतान कर रहे हैं।",
+  },
+  "cart.pay.upi.label": { en: "UPI ID", hi: "UPI आईडी" },
+  "cart.pay.upi.ph": { en: "yourname@upi", hi: "yourname@upi" },
+  "cart.pay.card.label": { en: "Card number", hi: "कार्ड नंबर" },
+  "cart.pay.card.ph": { en: "1234 5678 9012 3456", hi: "1234 5678 9012 3456" },
+  "cart.pay.button": { en: "Pay {total}", hi: "{total} भुगतान करें" },
+  "cart.pay.processing": { en: "Processing payment…", hi: "भुगतान हो रहा है…" },
+  "cart.pay.secure": {
+    en: "Secured by Razorpay · 256-bit encryption",
+    hi: "Razorpay द्वारा सुरक्षित · 256-बिट एन्क्रिप्शन",
+  },
+  "cart.pay.demo": { en: "Demo mode — no real money is charged.", hi: "डेमो मोड — कोई असली पैसा नहीं कटेगा।" },
+  "cart.pay.rzp": {
+    en: "You'll continue on the secure Razorpay page.",
+    hi: "आप सुरक्षित Razorpay पृष्ठ पर जाएँगे।",
+  },
+  "cart.pay.rzp.button": { en: "Continue to Razorpay", hi: "Razorpay पर जाएँ" },
+  "cart.pay.change": { en: "Change", hi: "बदलें" },
+  "cart.pay.upi.invalid": { en: "Enter a valid UPI ID (e.g. name@upi).", hi: "सही UPI आईडी लिखें (जैसे name@upi)।" },
+  "cart.pay.card.invalid": { en: "Enter a valid card number.", hi: "सही कार्ड नंबर लिखें।" },
 
   /* Orders */
   "orders.title": { en: "Your orders", hi: "आपके ऑर्डर" },
