@@ -20,20 +20,25 @@ import {
   Minus,
   Plus,
   ShoppingBag,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Id } from "@/convex/_generated/dataModel";
 
 type DetailProduct = ProductCardProduct & {
-  maker: {
-    _id: string;
-    shopName: string;
-    location: string;
-    craft: string;
-    bio: string;
-    image?: string;
-  } | null;
+  maker:
+    | {
+        _id: string;
+        shopName: string;
+        location: string;
+        craft: string;
+        crafts?: string[];
+        story: string;
+        bio: string;
+        image?: string;
+      }
+    | null;
 };
 
 export default function ProductDetail() {
@@ -188,7 +193,12 @@ export default function ProductDetail() {
                     </p>
                     <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                       <MapPin className="size-3" />
-                      {product.maker.location} · {product.maker.craft}
+                      {product.maker.location} ·
+                      {(product.maker.crafts ?? [product.maker.craft])
+                        .slice(0, 3)
+                        .map((c) => categoryName(c, lang))
+                        .join(", ")}
+                      {(product.maker.crafts?.length ?? 0) > 3 && " +"}
                     </p>
                   </div>
                   <span className="shrink-0 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
@@ -200,6 +210,44 @@ export default function ProductDetail() {
               <p className="mt-5 text-sm leading-7 text-muted-foreground">
                 {product.description}
               </p>
+
+              {/* Cultural story — the artisan's own words, front and center
+                  before the buy box. */}
+              {product.maker?.story && (
+                <aside className="mt-6 rounded-2xl border border-primary/25 bg-primary/5 p-5 shadow-soft">
+                  <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+                    <Sparkles className="size-3.5" />
+                    {t("pd.story.title")}
+                  </p>
+                  <p className="mt-2.5 border-l-2 border-primary/30 pl-4 text-sm italic leading-7 text-foreground/90">
+                    {product.maker.story}
+                  </p>
+                  <Link
+                    to={`/maker/${product.maker._id}`}
+                    className="mt-3 inline-flex text-xs font-semibold text-primary hover:underline"
+                  >
+                    {t("pd.maker.visit")}
+                  </Link>
+                </aside>
+              )}
+
+              {(product.colors?.length || product.dimensions) && (
+                <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  {product.dimensions && (
+                    <span className="rounded-full border border-border bg-card px-3 py-1.5">
+                      {product.dimensions}
+                    </span>
+                  )}
+                  {(product.colors ?? []).map((c) => (
+                    <span
+                      key={c}
+                      className="rounded-full border border-border bg-card px-3 py-1.5"
+                    >
+                      {c}
+                    </span>
+                  ))}
+                </div>
+              )}
 
               <div className="mt-5 flex flex-wrap gap-2">
                 {product.materials.map((m) => (

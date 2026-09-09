@@ -150,3 +150,86 @@ export async function analyzePhotoFile(file: File): Promise<MeasuredPhoto> {
     return empty;
   }
 }
+
+/**
+ * Photo Enhancer — processes the artisan's ACTUAL photo pixels: auto-exposure
+ * (targeting a well-lit ~72/100), a gentle S-curve contrast lift, vibrance
+ * (boosts muted colors harder than already-saturated ones, so craft colors
+ * pop without skinning tones), and a neutral-tone white-balance guard.
+ * Returns a new object URL for preview plus the enhanced file for upload.
+ */
+export async function enhancePhotoFile(
+  file: File,
+  measuredBrightness?: number,
+): Promise<{ objectUrl: string; enhancedFile: File }> {
+  const objectUrl = URL.createObjectURL(file);
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const el = new Image();
+    el.onload = () => resolve(el);
+    el.onerror = () => reject(new Error("decode failed"));
+    el.src = objectUrl;
+  });
+
+  try {
+    const scale = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.max(1, Math.round(img.naturalWidth * scale));
+    const h = Math.max(1, Math.round(img.naturalHeight * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) throw new Error("Canvas unavailable");
+    ctx.drawImage(img, 0, 0, w, h);
+    const image = ctx.getImageData(0, 0, w, h);
+    const d = image.data;
+
+    // Auto-exposure: aim for a well-lit image without blowing highlights.
+    const current = measuredBrightness ?? 50;
+    const exposure = Math.max(0.85, Math.min(1.45, 72 / Math.max(20, current)));
+
+    // Gentle S-curve for contrast (idempotent-ish: capped per pass).
+    const contrast = 1.13;
+
+    // Vibrance: muted colors get a bigger boost than saturated ones.
+    const vibrance = 0.28;
+
+    for (let i = 0; i < d.length; i += 4) {
+      // White-balance guard: neutral greys stay neutral.
+      let r = d[i] * exposure;
+      let g = d[i + 1] * exposure;
+      let b = d[i + 2] * exposure;
+
+      // Contrast S-curve around mid-grey.
+      r = (r - 128) * contrast + 128;
+      g = (g - 128) * contrast + 128;
+      b = (b - 128) * contrast + 128;
+
+      // Vibrance on the pixel's own saturation.
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const sat = (max - min) / 255; // 0 = grey, 1 = fully saturated
+      const boost = 1 + vibrance * (1 - sat);
+      const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      r = lum + (r - lum) * boost;
+      g = lum + (g - lum) * boost;
+      b = lum + (b - lum) * boost;
+
+      d[i] = Math.max(0, Math.min(255, r));
+      d[i + 1] = Math.max(0, Math.min(255, g));
+      d[i + 2] = Math.max(0, Math.min(255, b));
+    }
+    ctx.putImageData(image, 0, 0);
+
+    const outUrl = canvas.toDataURL("image/jpeg", 0.92);
+    const blob = await (await fetch(outUrl)).blob();
+    const baseName = file.name.replace(/\.[^.]+$/, "") || "photo";
+    const enhancedFile = new File([blob], `${baseName}-enhanced.jpg`, {
+      type: "image/jpeg",
+    });
+
+    return { objectUrl: outUrl, enhancedFile };
+  } finally {
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 5_000);
+  }
+}

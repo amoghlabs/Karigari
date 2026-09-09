@@ -18,6 +18,9 @@ export type ProductCardProduct = {
   materials: string[];
   madeToOrder: boolean;
   stock: number;
+  colors?: string[];
+  dimensions?: string;
+  tags?: string[];
   maker?: { _id: string; shopName: string; location?: string } | null;
 };
 

@@ -33,6 +33,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Camera,
+  Check,
   CheckCircle2,
   Eye,
   Hammer,
@@ -48,6 +49,7 @@ import {
   Sparkles,
   Store,
   Trash2,
+  Wand2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -903,7 +905,27 @@ function ListingDialog({
                   <>{t("ld.aiGenerate")}</>
                 )}
               </Button>
+              <Button
+                type="button"
+                size="sm"
+                className="rounded-full shadow-soft"
+                disabled={cataloguing}
+                onClick={handleSmartCatalogue}
+              >
+                {cataloguing ? (
+                  <>
+                    <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+                    {t("ld.smartWorking")}
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-1.5 size-3.5" />
+                    {t("ld.smartCatalogue")}
+                  </>
+                )}
+              </Button>
             </div>
+            <p className="mt-2 text-xs text-muted-foreground">{t("ld.smartHelp")}</p>
           </div>
 
           <div className="space-y-2">
@@ -979,16 +1001,42 @@ function ListingDialog({
                   alt=""
                   className="size-16 rounded-xl border border-border object-cover"
                 />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={photo.uploading}
-                  onClick={() => photo.inputRef.current?.click()}
-                >
-                  {photo.uploading && <Loader2 className="mr-1 size-3.5 animate-spin" />}
-                  {t("ob.photo.change")}
-                </Button>
+                <div className="flex flex-col gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={photo.uploading || photo.enhancing}
+                      onClick={() => photo.inputRef.current?.click()}
+                    >
+                      {photo.uploading && <Loader2 className="mr-1 size-3.5 animate-spin" />}
+                      {t("ob.photo.change")}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className={cn(photo.enhanced && "border-primary/50 text-primary")}
+                      disabled={photo.enhancing || photo.uploading}
+                      onClick={photo.enhance}
+                    >
+                      {photo.enhancing ? (
+                        <Loader2 className="mr-1 size-3.5 animate-spin" />
+                      ) : (
+                        <Wand2 className="mr-1 size-3.5" />
+                      )}
+                      {photo.enhanced ? t("ld.enhanced") : t("ld.enhance")}
+                    </Button>
+                  </div>
+                  {photo.measured?.ok && (
+                    <p className="text-xs text-muted-foreground">
+                      {t("ld.photoMeasured", {
+                        light: t("ld.light." + photo.measured.light.replace(/ /g, "_")),
+                      })}
+                    </p>
+                  )}
+                </div>
               </div>
             ) : (
               <Button
@@ -1028,6 +1076,37 @@ function ListingDialog({
               value={form.materials}
               onChange={(e) => set("materials", e.target.value)}
               placeholder={t("ld.materials.ph")}
+            />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="ldColors">{t("ld.colors")}</Label>
+              <Input
+                id="ldColors"
+                value={form.colors}
+                onChange={(e) => set("colors", e.target.value)}
+                placeholder={t("ld.colors.ph")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ldDimensions">{t("ld.dimensions")}</Label>
+              <Input
+                id="ldDimensions"
+                value={form.dimensions}
+                onChange={(e) => set("dimensions", e.target.value)}
+                placeholder={t("ld.dimensions.ph")}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="ldTags">{t("ld.tags")}</Label>
+            <Input
+              id="ldTags"
+              value={form.tags}
+              onChange={(e) => set("tags", e.target.value)}
+              placeholder={t("ld.tags.ph")}
             />
           </div>
 
@@ -1114,16 +1193,31 @@ function StudioSettings({
   const [form, setForm] = useState({
     shopName: maker.shopName,
     craft: maker.craft,
+    crafts: maker.crafts ?? [maker.craft],
     location: maker.location,
     bio: maker.bio,
     story: maker.story,
   });
   const makerId = maker._id as Id<"makers">;
 
+  const toggleCraft = (c: string) =>
+    setForm((f) => ({
+      ...f,
+      crafts: f.crafts.includes(c) ? f.crafts.filter((x) => x !== c) : [...f.crafts, c],
+    }));
+
   const handleSubmit = async () => {
     setSaving(true);
     try {
-      await updateMaker({ makerId, ...form });
+      await updateMaker({
+        makerId,
+        shopName: form.shopName,
+        craft: form.crafts[0] ?? form.craft,
+        crafts: form.crafts,
+        location: form.location,
+        bio: form.bio,
+        story: form.story,
+      });
       toast.success(t("stm.editToast"));
       onClose();
     } catch (err) {
@@ -1153,15 +1247,17 @@ function StudioSettings({
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>{t("ld.category")}</Label>
+              <p className="text-xs text-muted-foreground">{t("stm.craftsHint")}</p>
               <div className="flex flex-wrap gap-1.5">
                 {PRODUCT_CATEGORIES.map((c) => (
                   <button
                     key={c}
                     type="button"
-                    onClick={() => setForm((f) => ({ ...f, craft: c }))}
+                    aria-pressed={form.crafts.includes(c)}
+                    onClick={() => toggleCraft(c)}
                     className={cn(
                       "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-                      form.craft === c
+                      form.crafts.includes(c)
                         ? "border-primary bg-primary text-primary-foreground"
                         : "border-border bg-card text-muted-foreground",
                     )}
@@ -1296,9 +1392,15 @@ export default function Studio() {
             <h1 className="mt-1.5 font-display text-3xl font-semibold tracking-tight">
               {maker.shopName}
             </h1>
-            <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+            <p className="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
               <MapPin className="size-3.5" />
-              {maker.location} · {categoryName(maker.craft, lang)}
+              {maker.location} ·
+              {(maker.crafts ?? [maker.craft]).map((c, i) => (
+                <span key={c}>
+                  {i > 0 && ", "}
+                  {categoryName(c, lang)}
+                </span>
+              ))}
             </p>
           </div>
           <div className="flex gap-2">

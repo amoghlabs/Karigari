@@ -9,6 +9,18 @@ import { categoryName, useI18n } from "@/lib/i18n";
 import type { Id } from "@/convex/_generated/dataModel";
 import { MapPin, Package, Store } from "lucide-react";
 
+type StorefrontMaker = ProductCardProduct & {
+  products: ProductCardProduct[];
+  shopName: string;
+  location: string;
+  craft: string;
+  crafts?: string[];
+  bio: string;
+  story: string;
+  image?: string;
+  coverImage?: string;
+};
+
 export default function MakerStorefront() {
   const { id } = useParams<{ id: string }>();
   const { lang, t } = useI18n();
@@ -16,19 +28,9 @@ export default function MakerStorefront() {
   const maker = useQuery(
     api.shop.getMaker,
     id ? { id: id as Id<"makers"> } : "skip",
-  ) as
-    | (ProductCardProduct & {
-        products: ProductCardProduct[];
-        shopName: string;
-        location: string;
-        craft: string;
-        bio: string;
-        story: string;
-        image?: string;
-        coverImage?: string;
-      })
-    | null
-    | undefined;
+  ) as StorefrontMaker | null | undefined;
+
+  const makerCrafts = maker ? (maker.crafts ?? [maker.craft]) : [];
 
   return (
     <div className="flex min-h-screen flex-col bg-background bg-paper">
@@ -91,9 +93,9 @@ export default function MakerStorefront() {
                     <h1 className="font-display text-3xl font-semibold tracking-tight">
                       {maker.shopName}
                     </h1>
-                    <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <p className="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
                       <MapPin className="size-3.5" />
-                      {maker.location} · {categoryName(maker.craft, lang)}
+                      {maker.location} · {makerCrafts.map((c) => categoryName(c, lang)).join(", ")}
                     </p>
                   </div>
                 </div>
