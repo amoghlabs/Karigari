@@ -134,6 +134,22 @@ const schema = defineSchema(
       expiresAt: v.number(),
       used: v.boolean(),
     }).index("by_phone", ["phone"]),
+
+    // One checkout per payment attempt (Razorpay order or demo checkout).
+    checkoutSessions: defineTable({
+      userId: v.id("users"),
+      rzpOrderId: v.string(),
+      amount: v.number(), // rupees, snapshot of the payable cart
+      currency: v.string(),
+      fullName: v.string(),
+      address: v.string(),
+      status: v.union(
+        v.literal("pending"),
+        v.literal("placed"),
+      ),
+      rzpPaymentId: v.optional(v.string()),
+      createdAt: v.number(),
+    }).index("by_userId", ["userId"]),
   },
   {
     schemaValidation: false,

@@ -9,6 +9,7 @@ type SeedProduct = {
   materials: string[];
   madeToOrder: boolean;
   stock: number;
+  daysAgo?: number; // lower = newer; drives the "new arrivals" sort
 };
 
 type SeedMaker = {
@@ -447,6 +448,7 @@ export const seedCatalog = internalMutation({
           madeToOrder: p.madeToOrder,
           stock: p.stock,
           isActive: true,
+          daysAgo: p.daysAgo,
         });
       }
     }
