@@ -45,7 +45,7 @@ const seed: SeedMaker[] = [
         category: "Pottery & Terracotta",
         price: 1850,
         imageUrl:
-          "https://images.unsplash.com/photo-1487700160041-babef9c3cb55?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1526198049595-f32cde2a219d?w=800&h=800&fit=crop",
         materials: ["Quartz & clay", "Cobalt paint", "Wood firing"],
         madeToOrder: true,
         stock: 6,
@@ -57,7 +57,7 @@ const seed: SeedMaker[] = [
         category: "Pottery & Terracotta",
         price: 950,
         imageUrl:
-          "https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1759927576675-995b95ff53ed?w=800&h=800&fit=crop",
         materials: ["River clay", "Mustard oil finish"],
         madeToOrder: false,
         stock: 40,
@@ -69,7 +69,7 @@ const seed: SeedMaker[] = [
         category: "Pottery & Terracotta",
         price: 1450,
         imageUrl:
-          "https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1773442549368-a67c2e5fe49f?w=800&h=800&fit=crop",
         materials: ["Banganaga river clay", "Natural slip paint"],
         madeToOrder: true,
         stock: 8,
@@ -81,7 +81,7 @@ const seed: SeedMaker[] = [
         category: "Pottery & Terracotta",
         price: 1200,
         imageUrl:
-          "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1528789386055-75c4b717bad1?w=800&h=800&fit=crop",
         materials: ["River clay", "Natural slip"],
         madeToOrder: true,
         stock: 14,
@@ -94,7 +94,7 @@ const seed: SeedMaker[] = [
         category: "Pottery & Terracotta",
         price: 1100,
         imageUrl:
-          "https://images.unsplash.com/photo-1590947132387-155cc02f3212?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1627834279031-55924de819b3?w=800&h=800&fit=crop",
         materials: ["River clay", "Natural glaze"],
         madeToOrder: false,
         stock: 18,
@@ -122,7 +122,7 @@ const seed: SeedMaker[] = [
         category: "Handloom Textiles",
         price: 3200,
         imageUrl:
-          "https://images.unsplash.com/photo-1533090161767-e6ffed986c88?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1765700326277-8c9d11233fd9?w=800&h=800&fit=crop",
         materials: ["Banarasi silk", "Handloom weave"],
         madeToOrder: true,
         stock: 5,
@@ -134,7 +134,7 @@ const seed: SeedMaker[] = [
         category: "Handloom Textiles",
         price: 5800,
         imageUrl:
-          "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1597897569252-9df44c7de0db?w=800&h=800&fit=crop",
         materials: ["Hand-spun cotton", "Zari border"],
         madeToOrder: true,
         stock: 3,
@@ -146,7 +146,7 @@ const seed: SeedMaker[] = [
         category: "Handloom Textiles",
         price: 2600,
         imageUrl:
-          "https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1517472292914-9570a594783b?w=800&h=800&fit=crop",
         materials: ["Tussar silk", "Hand-knotted fringe"],
         madeToOrder: false,
         stock: 12,
@@ -158,7 +158,7 @@ const seed: SeedMaker[] = [
         category: "Handloom Textiles",
         price: 2900,
         imageUrl:
-          "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1698156581290-03689df66ee7?w=800&h=800&fit=crop",
         materials: ["Banarasi silk", "Handloom weave"],
         madeToOrder: true,
         stock: 6,
@@ -171,7 +171,7 @@ const seed: SeedMaker[] = [
         category: "Handloom Textiles",
         price: 4200,
         imageUrl:
-          "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1623310658847-33f12eaab710?w=800&h=800&fit=crop",
         materials: ["Hand-spun cotton", "Natural dyes"],
         madeToOrder: true,
         stock: 4,
@@ -199,7 +199,7 @@ const seed: SeedMaker[] = [
         category: "Block Printing",
         price: 3900,
         imageUrl:
-          "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1693988112221-86644d24f47a?w=800&h=800&fit=crop",
         materials: ["Washed cotton", "Natural indigo & madder"],
         madeToOrder: true,
         stock: 4,
@@ -211,7 +211,7 @@ const seed: SeedMaker[] = [
         category: "Block Printing",
         price: 1400,
         imageUrl:
-          "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1575277340591-849c346c4542?w=800&h=800&fit=crop",
         materials: ["Cotton", "Hand-carved teak blocks"],
         madeToOrder: false,
         stock: 15,
@@ -223,7 +223,7 @@ const seed: SeedMaker[] = [
         category: "Block Printing",
         price: 1800,
         imageUrl:
-          "https://images.unsplash.com/photo-1596464716127-f2a82984de30?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1693990155103-b349eba41fb5?w=800&h=800&fit=crop",
         materials: ["Cotton", "Indigo & mud resist"],
         madeToOrder: true,
         stock: 7,
@@ -235,7 +235,7 @@ const seed: SeedMaker[] = [
         category: "Block Printing",
         price: 1600,
         imageUrl:
-          "https://images.unsplash.com/photo-1618220179428-22790b461013?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1783762774066-65559f814568?w=800&h=800&fit=crop",
         materials: ["Cotton", "Natural indigo & madder"],
         madeToOrder: false,
         stock: 12,
@@ -248,7 +248,7 @@ const seed: SeedMaker[] = [
         category: "Block Printing",
         price: 1500,
         imageUrl:
-          "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1546828209-f89f24090b36?w=800&h=800&fit=crop",
         materials: ["Cotton", "Hand-carved teak blocks"],
         madeToOrder: false,
         stock: 10,
@@ -276,7 +276,7 @@ const seed: SeedMaker[] = [
         category: "Jewelry",
         price: 6500,
         imageUrl:
-          "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1616756351484-798f37bdffa0?w=800&h=800&fit=crop",
         materials: ["22k gold foil", "Kundan stones", "Meenakari enamel"],
         madeToOrder: true,
         stock: 3,
@@ -288,7 +288,7 @@ const seed: SeedMaker[] = [
         category: "Jewelry",
         price: 2200,
         imageUrl:
-          "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1762686130435-897de4b26aac?w=800&h=800&fit=crop",
         materials: ["Sterling silver", "Enamel work"],
         madeToOrder: false,
         stock: 10,
@@ -300,7 +300,7 @@ const seed: SeedMaker[] = [
         category: "Jewelry",
         price: 4800,
         imageUrl:
-          "https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1767971958465-16d986fad8df?w=800&h=800&fit=crop",
         materials: ["23k gold foil", "Coloured glass"],
         madeToOrder: true,
         stock: 4,
@@ -312,7 +312,7 @@ const seed: SeedMaker[] = [
         category: "Jewelry",
         price: 3800,
         imageUrl:
-          "https://images.unsplash.com/photo-1615529182904-14819c35db37?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1758995116383-f51775896add?w=800&h=800&fit=crop",
         materials: ["22k gold foil", "Kundan stones", "Meenakari enamel"],
         madeToOrder: true,
         stock: 3,
@@ -325,7 +325,7 @@ const seed: SeedMaker[] = [
         category: "Jewelry",
         price: 1500,
         imageUrl:
-          "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1535632787350-4e68ef0ac584?w=800&h=800&fit=crop",
         materials: ["Sterling silver"],
         madeToOrder: false,
         stock: 9,
@@ -353,7 +353,7 @@ const seed: SeedMaker[] = [
         category: "Woodwork",
         price: 2600,
         imageUrl:
-          "https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1609688538023-2090aa8e874e?w=800&h=800&fit=crop",
         materials: ["Seasoned teak", "Natural oil finish"],
         madeToOrder: true,
         stock: 5,
@@ -365,7 +365,7 @@ const seed: SeedMaker[] = [
         category: "Woodwork",
         price: 2400,
         imageUrl:
-          "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1784901391931-db500cac7297?w=800&h=800&fit=crop",
         materials: ["Mango wood", "Food-safe lacquer"],
         madeToOrder: false,
         stock: 9,
@@ -377,7 +377,7 @@ const seed: SeedMaker[] = [
         category: "Woodwork",
         price: 5200,
         imageUrl:
-          "https://images.unsplash.com/photo-1532372320572-cda25653a26d?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1634798245965-03669c757183?w=800&h=800&fit=crop",
         materials: ["Teak", "Natural oil finish"],
         madeToOrder: true,
         stock: 3,
@@ -389,7 +389,7 @@ const seed: SeedMaker[] = [
         category: "Woodwork",
         price: 1800,
         imageUrl:
-          "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1644125280477-0ea702960616?w=800&h=800&fit=crop",
         materials: ["Mango wood", "Natural oil finish"],
         madeToOrder: true,
         stock: 7,
@@ -402,7 +402,7 @@ const seed: SeedMaker[] = [
         category: "Woodwork",
         price: 950,
         imageUrl:
-          "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1594761077961-cadd185540a4?w=800&h=800&fit=crop",
         materials: ["Teak", "Food-safe oil"],
         madeToOrder: false,
         stock: 20,
@@ -430,7 +430,7 @@ const seed: SeedMaker[] = [
         category: "Metalwork",
         price: 5900,
         imageUrl:
-          "https://images.unsplash.com/photo-1520697830682-bbb6e85e2b0b?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1755798320739-ebf99af9cfe6?w=800&h=800&fit=crop",
         materials: ["Brass", "Lost-wax casting"],
         madeToOrder: true,
         stock: 2,
@@ -442,7 +442,7 @@ const seed: SeedMaker[] = [
         category: "Metalwork",
         price: 3600,
         imageUrl:
-          "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1763475945419-20e68c88c05b?w=800&h=800&fit=crop",
         materials: ["Brass"],
         madeToOrder: false,
         stock: 6,
@@ -454,7 +454,7 @@ const seed: SeedMaker[] = [
         category: "Metalwork",
         price: 4100,
         imageUrl:
-          "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1768728584503-65db42d13856?w=800&h=800&fit=crop",
         materials: ["Brass", "Cotton cord"],
         madeToOrder: true,
         stock: 4,
@@ -466,7 +466,7 @@ const seed: SeedMaker[] = [
         category: "Metalwork",
         price: 1700,
         imageUrl:
-          "https://images.unsplash.com/photo-1522735338363-cc7313be0ae0?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1764426380349-86862ad2b89a?w=800&h=800&fit=crop",
         materials: ["Brass", "Lost-wax casting"],
         madeToOrder: false,
         stock: 8,
@@ -479,7 +479,7 @@ const seed: SeedMaker[] = [
         category: "Metalwork",
         price: 1100,
         imageUrl:
-          "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1783255571174-d329a3895407?w=800&h=800&fit=crop",
         materials: ["Brass"],
         madeToOrder: false,
         stock: 15,
@@ -507,7 +507,7 @@ const seed: SeedMaker[] = [
         category: "Bamboo & Cane",
         price: 1600,
         imageUrl:
-          "https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1590751518505-1fc2d227ef9b?w=800&h=800&fit=crop",
         materials: ["Bamboo", "Rattan cane"],
         madeToOrder: false,
         stock: 11,
@@ -519,7 +519,7 @@ const seed: SeedMaker[] = [
         category: "Bamboo & Cane",
         price: 750,
         imageUrl:
-          "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1646170629004-b3c84a27fc17?w=800&h=800&fit=crop",
         materials: ["Bamboo"],
         madeToOrder: false,
         stock: 25,
@@ -531,7 +531,7 @@ const seed: SeedMaker[] = [
         category: "Bamboo & Cane",
         price: 2800,
         imageUrl:
-          "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1781232756159-97eba33dc051?w=800&h=800&fit=crop",
         materials: ["Rattan cane", "Bamboo handle", "Cotton lining"],
         madeToOrder: true,
         stock: 6,
@@ -543,7 +543,7 @@ const seed: SeedMaker[] = [
         category: "Bamboo & Cane",
         price: 2400,
         imageUrl:
-          "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1758352512406-df54693658ab?w=800&h=800&fit=crop",
         materials: ["Bamboo", "Rattan cane"],
         madeToOrder: true,
         stock: 5,
@@ -556,7 +556,7 @@ const seed: SeedMaker[] = [
         category: "Bamboo & Cane",
         price: 1300,
         imageUrl:
-          "https://images.unsplash.com/photo-1553413077-190dd305871c?w=800&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1567368407227-719ba57067a7?w=800&h=800&fit=crop",
         materials: ["Rattan cane", "Bamboo frame"],
         madeToOrder: false,
         stock: 9,
@@ -576,19 +576,25 @@ const seed: SeedMaker[] = [
 export const seedCatalog = internalMutation({
   args: {},
   handler: async (ctx) => {
-    // If the catalog is already current (every seed title present), leave it
-    // alone — refreshing on every landing mount would orphan carts and
-    // favorites that reference the previous seed's product ids.
-    const expectedTitles = new Set(
-      seed.flatMap((m) => m.products.map((p) => p.title)),
+    // If the catalog is already current (every seed title present with the
+    // matching image), leave it alone — refreshing on every landing mount
+    // would orphan carts and favorites that reference the previous seed's
+    // product ids. Image-only seed updates still propagate because we
+    // compare each seed product's imageUrl against the stored one.
+    const expectedByTitle = new Map(
+      seed.flatMap((m) => m.products.map((p) => [p.title, p.imageUrl] as const)),
     );
     const existing = await ctx.db.query("products").collect();
-    const present = new Set(existing.map((p) => p.title));
-    let missing = 0;
-    for (const title of expectedTitles) {
-      if (!present.has(title)) missing += 1;
+    const byTitle = new Map(existing.map((p) => [p.title, p] as const));
+    let stale = false;
+    for (const [title, imageUrl] of expectedByTitle) {
+      const current = byTitle.get(title);
+      if (!current || current.imageUrl !== imageUrl) {
+        stale = true;
+        break;
+      }
     }
-    if (missing === 0) return;
+    if (!stale) return;
 
     // Remove previously seeded catalog rows (seed makers have no userId),
     // keeping user-created studios and their products intact.
