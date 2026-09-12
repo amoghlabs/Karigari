@@ -24,7 +24,7 @@ type SeedMaker = {
   products: SeedProduct[];
 };
 
-const seed: SeedMaker[] = [
+export const seed: SeedMaker[] = [
   {
     shopName: "Mitti Kala",
     bio: "Wheel-thrown clay and Jaipur blue pottery from a family studio in the Pink City.",

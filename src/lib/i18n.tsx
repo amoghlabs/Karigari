@@ -12,7 +12,7 @@ export type Lang = "en" | "hi";
 
 type Dict = Record<string, { en: string; hi: string }>;
 
-const DICT: Dict = {
+export const DICT: Dict = {
   /* Brand */
   "brand.name": { en: "कारीgari", hi: "कारीगरी" },
   "brand.tagline": {
