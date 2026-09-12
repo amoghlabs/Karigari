@@ -85,6 +85,7 @@ const schema = defineSchema(
       colors: v.optional(v.array(v.string())), // from Smart Cataloguing
       dimensions: v.optional(v.string()), // from Smart Cataloguing
       tags: v.optional(v.array(v.string())), // from Smart Cataloguing
+      descriptionHi: v.optional(v.string()), // AI translation of the description
       daysAgo: v.optional(v.number()), // lower = newer; drives the "new arrivals" sort
     })
       .index("by_makerId", ["makerId"])

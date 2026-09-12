@@ -5,6 +5,7 @@ import { api } from "@/convex/_generated/api";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ProductCard, type ProductCardProduct } from "@/components/ProductCard";
+import { SellWithAiSection } from "@/components/SellWithAi";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useI18n } from "@/lib/i18n";
@@ -388,6 +389,7 @@ export default function Landing() {
       <SiteHeader transparent />
       <main>
         <Hero />
+        <SellWithAiSection />
         <FeaturedProducts />
         <Makers />
         <div className="divider-blockprint my-2 opacity-50" />

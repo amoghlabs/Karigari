@@ -134,11 +134,85 @@ export const myListings = query({
   },
 });
 
+/**
+ * The real numbers behind the AI's price suggestion: what similar pieces
+ * actually sell for across the market, and what this studio has sold before.
+ * "Sell with AI" shows these to the artisan so the number is explainable.
+ */
+export const pricingContext = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) return null;
+
+    const maker = await ctx.db
+      .query("makers")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
+    if (!maker) return null;
+
+    // Market prices for every live piece, grouped by craft category.
+    const active = await ctx.db
+      .query("products")
+      .withIndex("by_active", (q) => q.eq("isActive", true))
+      .collect();
+
+    const categoryStats: Record<
+      string,
+      { count: number; avgPrice: number; minPrice: number; maxPrice: number }
+    > = {};
+    for (const product of active) {
+      const stat = (categoryStats[product.category] ??= {
+        count: 0,
+        avgPrice: 0,
+        minPrice: Number.POSITIVE_INFINITY,
+        maxPrice: 0,
+      });
+      stat.count += 1;
+      stat.avgPrice += product.price;
+      stat.minPrice = Math.min(stat.minPrice, product.price);
+      stat.maxPrice = Math.max(stat.maxPrice, product.price);
+    }
+    for (const stat of Object.values(categoryStats)) {
+      stat.avgPrice = Math.round(stat.avgPrice / stat.count);
+      if (!Number.isFinite(stat.minPrice)) stat.minPrice = stat.avgPrice;
+    }
+
+    // This studio's own sales history — the "your past sales" part.
+    const items = await ctx.db
+      .query("orderItems")
+      .withIndex("by_makerId", (q) => q.eq("makerId", maker._id))
+      .collect();
+    const soldTotal = items.reduce((sum, item) => sum + item.price, 0);
+    const pastSales = {
+      count: items.length,
+      units: items.reduce((sum, item) => sum + item.quantity, 0),
+      avgPrice: items.length > 0 ? Math.round(soldTotal / items.length) : 0,
+    };
+
+    // And their live listings, so a new piece sits next to its siblings.
+    const mine = active.filter((p) => p.makerId === maker._id);
+    const myAvgPrice =
+      mine.length > 0
+        ? Math.round(mine.reduce((sum, p) => sum + p.price, 0) / mine.length)
+        : 0;
+
+    return {
+      crafts: maker.crafts ?? [maker.craft],
+      myListings: mine.length,
+      myAvgPrice,
+      pastSales,
+      categoryStats,
+    };
+  },
+});
+
 /** Publish a new listing. */
 export const createProduct = mutation({
   args: {
     title: v.string(),
     description: v.string(),
+    descriptionHi: v.optional(v.string()),
     category: categoryValidator,
     price: v.number(),
     imageUrl: v.optional(v.string()),
@@ -173,6 +247,7 @@ export const createProduct = mutation({
       makerId: maker._id,
       title,
       description: args.description.trim() || "A handmade piece.",
+      descriptionHi: args.descriptionHi?.trim() || undefined,
       category: args.category,
       price: Math.round(args.price * 100) / 100,
       imageUrl,
@@ -193,6 +268,7 @@ export const updateProduct = mutation({
     productId: v.id("products"),
     title: v.string(),
     description: v.string(),
+    descriptionHi: v.optional(v.string()),
     category: categoryValidator,
     price: v.number(),
     imageUrl: v.optional(v.string()),
@@ -225,6 +301,9 @@ export const updateProduct = mutation({
     await ctx.db.patch(args.productId, {
       title: args.title.trim() || product.title,
       description: args.description.trim() || product.description,
+      ...(args.descriptionHi !== undefined
+        ? { descriptionHi: args.descriptionHi.trim() || undefined }
+        : {}),
       category: CATEGORIES.includes(args.category)
         ? args.category
         : product.category,

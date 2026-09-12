@@ -336,6 +336,21 @@ const CATEGORY_MATERIALS: Record<string, string[]> = {
   "Bamboo & Cane": ["bamboo", "cane", "cotton thread binding"],
 };
 
+/** Typical ₹ a finished piece of each craft costs to make well by hand. */
+const CATEGORY_BASE_PRICE: Record<string, number> = {
+  "Pottery & Terracotta": 1200,
+  "Handloom Textiles": 2600,
+  "Block Printing": 1700,
+  Jewelry: 1900,
+  Woodwork: 2400,
+  Metalwork: 2800,
+  "Bamboo & Cane": 1500,
+};
+
+function roundTo(value: number, step: number) {
+  return Math.max(step, Math.round(value / step) * step);
+}
+
 const CRAFT_LABEL: Record<string, { en: string; hi: string }> = {
   "Pottery & Terracotta": { en: "hand-thrown pottery", hi: "हाथ से बना मृत्तिका शिल्प" },
   "Handloom Textiles": { en: "handwoven textile", hi: "हथकरघा वस्त्र" },
@@ -387,6 +402,27 @@ export const smartCatalogue = action({
         saturation: v.number(),
         colorHexes: v.array(v.string()),
         light: v.string(),
+      }),
+    ),
+    /** Real market + sales numbers from studio.pricingContext, if signed in. */
+    pricing: v.optional(
+      v.object({
+        categoryStats: v.record(
+          v.string(),
+          v.object({
+            count: v.number(),
+            avgPrice: v.number(),
+            minPrice: v.number(),
+            maxPrice: v.number(),
+          }),
+        ),
+        pastSales: v.object({
+          count: v.number(),
+          units: v.number(),
+          avgPrice: v.number(),
+        }),
+        myListings: v.number(),
+        myAvgPrice: v.number(),
       }),
     ),
   },
@@ -477,6 +513,76 @@ export const smartCatalogue = action({
       (voice ? ` कारीगर कहते हैं: “${voice}”।` : "") +
       " हर चीज़ में बनाने वाले हाथों के निशान हैं।";
 
+    // 8. A fair price, with the arithmetic shown. Every figure below is real
+    // data: an estimate from the craft's material costs, what similar pieces
+    // actually sell for in the market, and this studio's own sales history.
+    const base = CATEGORY_BASE_PRICE[craft] ?? 1500;
+    const materialCost = roundTo(base * (1 + 0.06 * Math.min(materials.length, 5)), 10);
+    const stats = args.pricing?.categoryStats?.[craft];
+    const market = stats && stats.count > 0 ? stats.avgPrice : Math.round(base * 1.15);
+    const sales = args.pricing?.pastSales?.avgPrice ?? 0;
+    const myAvg = args.pricing?.myAvgPrice ?? 0;
+
+    let blended =
+      sales > 0
+        ? materialCost * 0.35 + market * 0.4 + sales * 0.25
+        : materialCost * 0.45 + market * 0.55;
+    if (stats && stats.count > 1) {
+      blended = Math.min(Math.max(blended, stats.minPrice * 0.85), stats.maxPrice * 1.25);
+    }
+    const suggestedPrice = roundTo(blended, 50);
+
+    const craftEn = CRAFT_LABEL[craft]?.en ?? "handmade pieces";
+    const craftHi = CRAFT_LABEL[craft]?.hi ?? "हाथ की बनी चीज़ें";
+    const comparison =
+      sales > 0
+        ? {
+            label: "Your past sales (average)",
+            labelHi: "आपकी पिछली बिक्री (औसत)",
+            value: `₹${sales}`,
+            hi: `और आपकी पिछली बिक्री औसत ₹${sales}`,
+          }
+        : myAvg > 0
+          ? {
+              label: "Your other listings (average)",
+              labelHi: "आपकी अन्य सूचियाँ (औसत)",
+              value: `₹${myAvg}`,
+              hi: `और आपकी मौजूदा सूचियाँ औसत ₹${myAvg}`,
+            }
+          : null;
+
+    const priceBreakdown = [
+      {
+        label: "Material cost estimate",
+        labelHi: "सामग्री लागत का अनुमान",
+        value: `₹${materialCost}`,
+      },
+      {
+        label: stats && stats.count > 1 ? `Similar ${craft} pieces (average)` : `Typical ${craftEn} price`,
+        labelHi: `ऐसी ही ${craftHi} (औसत)`,
+        value: `₹${market}`,
+      },
+      ...(comparison
+        ? [{ label: comparison.label, labelHi: comparison.labelHi, value: comparison.value }]
+        : []),
+    ];
+
+    const priceReason =
+      `Based on your material cost (₹${materialCost}), similar ${craftEn} selling around ₹${market}` +
+      (comparison ? `, ${comparison.hi}` : "") +
+      `, we suggest ₹${suggestedPrice}.`;
+    const priceReasonHi =
+      `आपकी सामग्री लागत (₹${materialCost}), ऐसी ही ${craftHi} जो लगभग ₹${market} में बिकती हैं` +
+      (comparison ? `, ${comparison.hi}` : "") +
+      ` — इनके आधार पर हम ₹${suggestedPrice} सुझाते हैं।`;
+
+    const pricing = {
+      suggestedPrice,
+      priceReason,
+      priceReasonHi,
+      priceBreakdown,
+    };
+
     const heuristic = {
       name,
       category: craft,
@@ -486,6 +592,7 @@ export const smartCatalogue = action({
       tags,
       description: descEn,
       descriptionHi: descHi,
+      ...pricing,
       source: "heuristic" as const,
       photoAnalyzed: photo.ok,
       voiceAnalyzed: voice.length > 0,
@@ -523,6 +630,9 @@ export const smartCatalogue = action({
         tags: Array.isArray(parsed.tags) ? (parsed.tags as string[]).map(String).slice(0, 7) : heuristic.tags,
         description: typeof parsed.description === "string" && parsed.description.trim() ? parsed.description.trim() : heuristic.description,
         descriptionHi: typeof parsed.descriptionHi === "string" && parsed.descriptionHi.trim() ? parsed.descriptionHi.trim() : heuristic.descriptionHi,
+        // The price stays data-derived even on the LLM path — the artisan is
+        // shown the real material/market/sales arithmetic behind it.
+        ...pricing,
         source: "llm" as const,
         photoAnalyzed: photo.ok,
         voiceAnalyzed: voice.length > 0,

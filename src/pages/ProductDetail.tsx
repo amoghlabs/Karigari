@@ -171,44 +171,59 @@ export default function ProductDetail() {
                 )}
               </div>
 
+              {/* Meet the artisan — a human face on the piece, distinct from
+                  the story about the craft itself. */}
               {product.maker && (
-                <Link
-                  to={`/maker/${product.maker._id}`}
-                  className="group mt-5 flex items-center gap-3 rounded-xl border border-border/70 bg-card p-3 shadow-soft transition-shadow hover:shadow-soft-lg"
-                >
-                  {product.maker.image ? (
-                    <img
-                      src={product.maker.image}
-                      alt={product.maker.shopName}
-                      className="size-11 rounded-full border border-border object-cover"
-                    />
-                  ) : (
-                    <span className="flex size-11 items-center justify-center rounded-full bg-primary/10 font-display text-base font-semibold text-primary">
-                      {product.maker.shopName.charAt(0)}
-                    </span>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold">
-                      {product.maker.shopName}
-                    </p>
-                    <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
-                      <MapPin className="size-3" />
-                      {product.maker.location} ·
-                      {(product.maker.crafts ?? [product.maker.craft])
-                        .slice(0, 3)
-                        .map((c) => categoryName(c, lang))
-                        .join(", ")}
-                      {(product.maker.crafts?.length ?? 0) > 3 && " +"}
-                    </p>
+                <section className="mt-5 rounded-2xl border border-border/70 bg-card p-4 shadow-soft">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
+                    {t("pd.meet.title")}
+                  </p>
+                  <div className="mt-3 flex items-start gap-3">
+                    {product.maker.image ? (
+                      <img
+                        src={product.maker.image}
+                        alt={product.maker.shopName}
+                        className="size-14 shrink-0 rounded-xl border border-border object-cover"
+                      />
+                    ) : (
+                      <span className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-primary/10 font-display text-lg font-semibold text-primary">
+                        {product.maker.shopName.charAt(0)}
+                      </span>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-display text-base font-semibold tracking-tight">
+                        {product.maker.shopName}
+                      </p>
+                      <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                        <MapPin className="size-3" />
+                        {t("pd.meet.made")} {product.maker.location}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {t("mf.craftsLabel")}:{" "}
+                        {(product.maker.crafts ?? [product.maker.craft])
+                          .slice(0, 4)
+                          .map((c) => categoryName(c, lang))
+                          .join(", ")}
+                      </p>
+                    </div>
                   </div>
-                  <span className="shrink-0 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                  <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                    {product.maker.bio}
+                  </p>
+                  <Link
+                    to={`/maker/${product.maker._id}`}
+                    className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                  >
                     {t("pd.maker.visit")}
-                  </span>
-                </Link>
+                    <ChevronRight className="size-3" />
+                  </Link>
+                </section>
               )}
 
               <p className="mt-5 text-sm leading-7 text-muted-foreground">
-                {product.description}
+                {lang === "hi" && product.descriptionHi
+                  ? product.descriptionHi
+                  : product.description}
               </p>
 
               {/* Cultural story — the artisan's own words, front and center

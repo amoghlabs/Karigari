@@ -18,6 +18,7 @@ import {
   LogOut,
   Package,
   ShoppingBag,
+  Sparkles,
   Store,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router";
@@ -63,12 +64,13 @@ export function SiteHeader({ transparent = false }: { transparent?: boolean }) {
             {t("nav.shop")}
           </Button>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            className="text-sm font-medium"
+            className="gap-1.5 rounded-full border-primary/30 text-sm font-semibold text-primary shadow-soft"
             onClick={() => navigate("/studio")}
           >
-            {t("nav.artisans")}
+            <Sparkles className="size-3.5" />
+            {t("nav.sellWithAi")}
           </Button>
         </nav>
 

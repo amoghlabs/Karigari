@@ -30,6 +30,14 @@ import { useAuth } from "@/hooks/use-auth";
 import { useSpeechRecognition } from "@/hooks/use-speech";
 import { analyzePhotoFile, enhancePhotoFile, type MeasuredPhoto } from "@/lib/photoAnalysis";
 import {
+  SELL_AI_STEPS,
+  SellWithAiBadge,
+  SellWithAiStatus,
+  SellWithAiTracker,
+  type SellStepKey,
+  type SellStepState,
+} from "@/components/SellWithAi";
+import {
   ArrowLeft,
   ArrowRight,
   Camera,
@@ -38,13 +46,13 @@ import {
   Eye,
   Hammer,
   HeartHandshake,
+  IndianRupee,
   Loader2,
   MapPin,
   Mic,
   Package,
   Pencil,
   Phone,
-  Plus,
   Settings2,
   Sparkles,
   Store,
@@ -80,6 +88,10 @@ type Listing = {
   dimensions?: string;
   tags?: string[];
 };
+
+/** Small pause so each step of the Sell with AI pipeline is visible. */
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
 /* ------------------------------------------------------------------ */
 /* Photo upload via Convex storage                                     */
@@ -139,9 +151,9 @@ function usePhoto() {
 
   /** Photo Enhancer: auto-exposure + gentle contrast + vibrance + white-balance
    * guard on the actual pixels, then re-uploads the improved photo. */
-  const enhance = async () => {
+  const enhance = async (): Promise<MeasuredPhoto | null> => {
     const file = enhancedFileRef.current ?? fileRef.current;
-    if (!file) return;
+    if (!file) return null;
     setEnhancing(true);
     try {
       const { objectUrl, enhancedFile } = await enhancePhotoFile(
@@ -155,8 +167,10 @@ function usePhoto() {
       setMeasured(analysis);
       await uploadAsStorage(enhancedFile);
       toast.success("Photo enhanced");
+      return analysis;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Enhance failed.");
+      return null;
     } finally {
       setEnhancing(false);
     }
@@ -692,6 +706,23 @@ function Onboarding() {
 /* Listing dialog — photo + voice + AI description                     */
 /* ------------------------------------------------------------------ */
 
+/** Which step of Sell with AI the AI is running right now. */
+type SellStage =
+  | "idle"
+  | "enhancing"
+  | "writing"
+  | "translating"
+  | "suggesting"
+  | "live";
+
+/** What the AI produced for this piece, kept for the price-reasoning card. */
+type CatalogueSummary = {
+  descriptionHi: string;
+  suggestedPrice: number;
+  priceReason: string;
+  priceBreakdown: Array<{ label: string; labelHi: string; value: string }>;
+};
+
 type ListingDialogState =
   | { mode: "closed" }
   | { mode: "create" }
@@ -709,8 +740,9 @@ function ListingDialog({
   const { lang, t } = useI18n();
   const createProduct = useMutation(api.studio.createProduct);
   const updateProduct = useMutation(api.studio.updateProduct);
-  const generateListingCopy = useAction(api.aiStory.generateListingCopy);
   const smartCatalogue = useAction(api.aiStory.smartCatalogue);
+  // Real market + sales numbers — the reasoning behind the suggested price.
+  const pricingContext = useQuery(api.studio.pricingContext);
   const speech = useSpeechRecognition(lang);
   const photo = usePhoto();
 
@@ -731,61 +763,128 @@ function ListingDialog({
     isActive: listing?.isActive ?? true,
   }));
   const [saving, setSaving] = useState(false);
-  const [generating, setGenerating] = useState(false);
-  const [cataloguing, setCataloguing] = useState(false);
+  const [stage, setStage] = useState<SellStage>("idle");
+  const [catalogue, setCatalogue] = useState<CatalogueSummary | null>(null);
+  const photoPreview = photo.preview ?? (isEdit ? (listing?.imageUrl ?? null) : null);
+  const voiceText = speech.transcript.trim();
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
 
-  const handleAiGenerate = async () => {
-    if (!speech.transcript.trim() && !form.title.trim()) {
-      toast.info(t("ld.aiNeedsVoice"));
-      return;
-    }
-    setGenerating(true);
-    try {
-      const result = await generateListingCopy({
-        craft: form.category,
-        title: form.title || undefined,
-        voiceNote: speech.transcript || undefined,
-      });
-      set("description", lang === "hi" ? result.descriptionHi : result.description);
-      if (!form.title.trim() && result.titleHint) set("title", result.titleHint);
-      toast.success(t("ld.aiGenerate"));
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Generation failed.");
-    } finally {
-      setGenerating(false);
-    }
-  };
+  /** Which step of Sell with AI is running right now (drives the tracker). */
+  const activeStep: SellStepKey | null =
+    stage === "enhancing"
+      ? "enhance"
+      : stage === "writing"
+        ? "write"
+        : stage === "translating"
+          ? "translate"
+          : stage === "suggesting"
+            ? "price"
+            : stage === "live"
+              ? "live"
+              : null;
 
-  /** Smart Cataloguing: fills name/category/materials/colors/dimensions/tags/
-   * description from the artisan's ACTUAL voice transcript + photo pixels. */
-  const handleSmartCatalogue = async () => {
-    if (!speech.transcript.trim() && !form.title.trim() && !photo.measured?.ok) {
-      toast.info(t("ld.smartNeedsInput"));
+  const hasPhoto = Boolean(photoPreview);
+  const hasInput = hasPhoto || Boolean(voiceText) || Boolean(form.title.trim());
+
+  /** The next thing the artisan still has to do, so the tracker guides them. */
+  const nextStep: SellStepKey = !hasPhoto
+    ? "photo"
+    : !voiceText && !form.title.trim()
+      ? "voice"
+      : !catalogue
+        ? "write"
+        : "live";
+
+  const stepStates = SELL_AI_STEPS.reduce(
+    (acc, step) => {
+      const done =
+        step.key === "photo"
+          ? hasPhoto
+          : step.key === "voice"
+            ? Boolean(voiceText || form.title.trim())
+            : step.key === "enhance"
+              ? photo.enhanced
+              : step.key === "write"
+                ? Boolean(form.description.trim())
+                : step.key === "translate"
+                  ? Boolean(catalogue)
+                  : step.key === "price"
+                    ? Boolean(form.price.trim())
+                    : stage === "live";
+      acc[step.key] = done
+        ? "done"
+        : step.key === activeStep
+          ? "active"
+          : step.key === nextStep
+            ? "next"
+            : "todo";
+      return acc;
+    },
+    {} as Record<SellStepKey, SellStepState>,
+  );
+
+  /**
+   * Sell with AI — the flagship flow. The artisan has already done their two
+   * things (photo + voice); this runs the other five steps on their behalf and
+   * shows each one happening: enhance the real pixels, write the description,
+   * translate it, suggest a category and a fair price, then go live.
+   */
+  const runSellWithAi = async () => {
+    if (!hasInput) {
+      toast.info(t("ld.sellNeedsInput"));
       return;
     }
-    setCataloguing(true);
     try {
+      let analysis = photo.measured;
+      if (photo.preview && !photo.enhanced) {
+        setStage("enhancing");
+        const enhancedAnalysis = await photo.enhance();
+        if (enhancedAnalysis) analysis = enhancedAnalysis;
+      }
+
+      setStage("writing");
       const result = await smartCatalogue({
         craft: form.category,
         title: form.title || undefined,
-        voiceNote: speech.transcript || undefined,
-        photoAnalysis: photo.measured?.ok
+        voiceNote: voiceText || undefined,
+        photoAnalysis: analysis?.ok
           ? {
               ok: true,
-              width: photo.measured.width,
-              height: photo.measured.height,
-              aspect: photo.measured.aspect,
-              brightness: photo.measured.brightness,
-              contrast: photo.measured.contrast,
-              saturation: photo.measured.saturation,
-              colorHexes: photo.measured.colorHexes,
-              light: photo.measured.light,
+              width: analysis.width,
+              height: analysis.height,
+              aspect: analysis.aspect,
+              brightness: analysis.brightness,
+              contrast: analysis.contrast,
+              saturation: analysis.saturation,
+              colorHexes: analysis.colorHexes,
+              light: analysis.light,
+            }
+          : undefined,
+        pricing: pricingContext
+          ? {
+              categoryStats: pricingContext.categoryStats,
+              pastSales: pricingContext.pastSales,
+              myListings: pricingContext.myListings,
+              myAvgPrice: pricingContext.myAvgPrice,
             }
           : undefined,
       });
+
+      setCatalogue({
+        descriptionHi: result.descriptionHi,
+        suggestedPrice: result.suggestedPrice,
+        priceReason: lang === "hi" ? result.priceReasonHi : result.priceReason,
+        priceBreakdown: result.priceBreakdown,
+      });
+
+      setStage("translating");
+      await sleep(500);
+      setStage("suggesting");
+      await sleep(500);
+
+      // Just the empty fields — anything the artisan typed themselves wins.
       setForm((f) => ({
         ...f,
         title: f.title.trim() || result.name,
@@ -800,12 +899,14 @@ function ListingDialog({
         tags: f.tags.trim() || result.tags.join(", "),
         description:
           f.description.trim() || (lang === "hi" ? result.descriptionHi : result.description),
+        price: f.price.trim() || String(result.suggestedPrice),
       }));
-      toast.success(t("ld.smartDone"));
+
+      setStage("idle");
+      toast.success(t("ld.sellDone"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Cataloguing failed.");
-    } finally {
-      setCataloguing(false);
+      setStage("idle");
+      toast.error(err instanceof Error ? err.message : "Sell with AI failed.");
     }
   };
 
@@ -816,6 +917,7 @@ function ListingDialog({
       const base = {
         title: form.title,
         description: form.description,
+        descriptionHi: catalogue?.descriptionHi,
         category: form.category as (typeof PRODUCT_CATEGORIES)[number],
         price: Number(form.price) || 0,
         materials: form.materials.split(",").map((m) => m.trim()).filter(Boolean),
@@ -841,6 +943,10 @@ function ListingDialog({
           imageStorageId: photo.storageId ?? undefined,
         });
         toast.success(t("stm.publishToast"));
+        // Step 7 — let the artisan watch their piece reach the market.
+        setStage("live");
+        window.setTimeout(onClose, 1200);
+        return;
       }
       onClose();
     } catch (err) {
@@ -862,70 +968,163 @@ function ListingDialog({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Voice + AI */}
-          <div className="rounded-xl border border-primary/25 bg-primary/5 p-4">
-            <p className="flex items-center gap-1.5 text-sm font-semibold">
-              <Mic className="size-4 text-primary" />
-              {t("ld.voice")}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">{t("ld.voiceHelp")}</p>
-            <div className="mt-3 flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={() => (speech.listening ? speech.stop() : speech.start())}
-                className={cn(
-                  "flex size-12 items-center justify-center rounded-full shadow-soft transition-all",
-                  speech.listening
-                    ? "animate-pulse bg-destructive text-white"
-                    : "bg-primary text-primary-foreground hover:scale-105",
-                )}
-                aria-label={t("ld.voice")}
-              >
-                <Mic className="size-5" />
-              </button>
-              {speech.transcript && (
-                <p className="max-w-[220px] truncate text-xs text-muted-foreground">
-                  {speech.transcript}
-                </p>
-              )}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="rounded-full"
-                disabled={generating}
-                onClick={handleAiGenerate}
-              >
-                {generating ? (
-                  <>
-                    <Loader2 className="mr-1.5 size-3.5 animate-spin" />
-                    {t("ld.aiGenerating")}
-                  </>
-                ) : (
-                  <>{t("ld.aiGenerate")}</>
-                )}
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                className="rounded-full shadow-soft"
-                disabled={cataloguing}
-                onClick={handleSmartCatalogue}
-              >
-                {cataloguing ? (
-                  <>
-                    <Loader2 className="mr-1.5 size-3.5 animate-spin" />
-                    {t("ld.smartWorking")}
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="mr-1.5 size-3.5" />
-                    {t("ld.smartCatalogue")}
-                  </>
-                )}
-              </Button>
+          {/* Sell with AI — the flagship flow, with its step tracker */}
+          <div className="rounded-2xl border border-primary/25 bg-primary/5 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="flex items-center gap-1.5 font-display text-base font-semibold tracking-tight">
+                <Sparkles className="size-4 text-primary" />
+                {t("ld.sellWithAi")}
+              </p>
+              <SellWithAiBadge />
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">{t("ld.smartHelp")}</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              {t("ld.sellWithAiSub")}
+            </p>
+
+            <div className="mt-3.5">
+              <SellWithAiTracker states={stepStates} />
+            </div>
+
+            {stage === "live" ? (
+              <p className="mt-3 flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">
+                <CheckCircle2 className="size-3.5" />
+                {t("ld.sellLive")}
+              </p>
+            ) : (
+              activeStep && (
+                <div className="mt-3">
+                  <SellWithAiStatus stage={activeStep} />
+                </div>
+              )
+            )}
+
+            {/* The artisan's two jobs: a photo and a few spoken words. */}
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-border/70 bg-card p-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                  {t("swa.step.photo")}
+                </p>
+                <div className="mt-2 flex items-center gap-3">
+                  {photoPreview ? (
+                    <img
+                      src={photoPreview}
+                      alt=""
+                      className="size-14 shrink-0 rounded-lg border border-border object-cover"
+                    />
+                  ) : (
+                    <span className="flex size-14 shrink-0 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
+                      <Camera className="size-5" />
+                    </span>
+                  )}
+                  <div className="flex min-w-0 flex-col gap-1.5">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 rounded-full px-3 text-xs"
+                      disabled={photo.uploading || photo.enhancing}
+                      onClick={() => photo.inputRef.current?.click()}
+                    >
+                      {photo.uploading ? (
+                        <Loader2 className="mr-1 size-3.5 animate-spin" />
+                      ) : (
+                        <Camera className="mr-1 size-3.5" />
+                      )}
+                      {photoPreview ? t("ob.photo.change") : t("ob.photo.upload")}
+                    </Button>
+                    {photo.preview && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          "h-8 justify-start rounded-full px-2.5 text-xs",
+                          photo.enhanced && "text-primary",
+                        )}
+                        disabled={photo.enhancing || photo.uploading}
+                        onClick={() => photo.enhance()}
+                      >
+                        {photo.enhancing ? (
+                          <Loader2 className="mr-1 size-3.5 animate-spin" />
+                        ) : (
+                          <Wand2 className="mr-1 size-3.5" />
+                        )}
+                        {photo.enhanced ? t("ld.enhanced") : t("ld.enhance")}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                <input
+                  ref={photo.inputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => photo.pick(e.target.files?.[0])}
+                />
+                <p className="mt-2 text-[11px] leading-4 text-muted-foreground">
+                  {photo.measured?.ok
+                    ? t("ld.photoMeasured", {
+                        light: t(
+                          "ld.light." + photo.measured.light.replace(/ /g, "_"),
+                        ),
+                      })
+                    : t("ld.photoHelp")}
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-border/70 bg-card p-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                  {t("swa.step.voice")}
+                </p>
+                <div className="mt-2 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => (speech.listening ? speech.stop() : speech.start())}
+                    className={cn(
+                      "flex size-11 shrink-0 items-center justify-center rounded-full shadow-soft transition-all",
+                      speech.listening
+                        ? "animate-pulse bg-destructive text-white"
+                        : "bg-primary text-primary-foreground hover:scale-105",
+                    )}
+                    aria-label={t("ld.voice")}
+                  >
+                    <Mic className="size-5" />
+                  </button>
+                  <p className="min-w-0 flex-1 text-xs leading-5 text-muted-foreground">
+                    {speech.listening
+                      ? t("ob.story.recording")
+                      : voiceText
+                        ? `“${voiceText}”`
+                        : speech.supported
+                          ? t("ld.voiceHelp")
+                          : t("ob.story.unsupported")}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              size="lg"
+              className="mt-4 w-full rounded-full text-base shadow-soft"
+              disabled={stage !== "idle" || !hasInput}
+              onClick={runSellWithAi}
+            >
+              {stage !== "idle" ? (
+                <>
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  {t("ld.sellRunning")}
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 size-4" />
+                  {t("ld.sellRun")}
+                </>
+              )}
+            </Button>
+            <p className="mt-2 text-center text-[11px] text-muted-foreground">
+              {t("ld.enhanceHint")}
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -989,84 +1188,49 @@ function ListingDialog({
                 placeholder="1500"
                 required
               />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>{t("ld.photo")}</Label>
-            {photo.preview ? (
-              <div className="flex items-center gap-3">
-                <img
-                  src={photo.preview}
-                  alt=""
-                  className="size-16 rounded-xl border border-border object-cover"
-                />
-                <div className="flex flex-col gap-2">
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={photo.uploading || photo.enhancing}
-                      onClick={() => photo.inputRef.current?.click()}
-                    >
-                      {photo.uploading && <Loader2 className="mr-1 size-3.5 animate-spin" />}
-                      {t("ob.photo.change")}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className={cn(photo.enhanced && "border-primary/50 text-primary")}
-                      disabled={photo.enhancing || photo.uploading}
-                      onClick={photo.enhance}
-                    >
-                      {photo.enhancing ? (
-                        <Loader2 className="mr-1 size-3.5 animate-spin" />
-                      ) : (
-                        <Wand2 className="mr-1 size-3.5" />
-                      )}
-                      {photo.enhanced ? t("ld.enhanced") : t("ld.enhance")}
-                    </Button>
+              {catalogue && catalogue.suggestedPrice > 0 && (
+                <div className="rounded-xl border border-primary/25 bg-primary/5 p-3">
+                  <p className="flex items-center gap-1.5 text-sm font-semibold text-primary">
+                    <IndianRupee className="size-4" />
+                    {t("ld.priceSuggest", {
+                      price: formatPrice(catalogue.suggestedPrice),
+                    })}
+                  </p>
+                  <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    {t("ld.priceWhy")}
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    {catalogue.priceReason}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {catalogue.priceBreakdown.map((part) => (
+                      <span
+                        key={part.label}
+                        className="rounded-full border border-border bg-card px-2.5 py-1 text-[11px] text-muted-foreground"
+                      >
+                        {lang === "hi" ? part.labelHi : part.label}:{" "}
+                        <span className="font-semibold text-foreground">{part.value}</span>
+                      </span>
+                    ))}
                   </div>
-                  {photo.measured?.ok && (
-                    <p className="text-xs text-muted-foreground">
-                      {t("ld.photoMeasured", {
-                        light: t("ld.light." + photo.measured.light.replace(/ /g, "_")),
-                      })}
+                  {form.price.trim() === String(catalogue.suggestedPrice) ? (
+                    <p className="mt-2.5 text-[11px] font-medium text-primary">
+                      ✓ {t("ld.priceApplied")}
                     </p>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="mt-2.5 h-8 rounded-full text-xs"
+                      onClick={() => set("price", String(catalogue.suggestedPrice))}
+                    >
+                      {t("ld.usePrice")}
+                    </Button>
                   )}
                 </div>
-              </div>
-            ) : (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={photo.uploading}
-                onClick={() => photo.inputRef.current?.click()}
-              >
-                {photo.uploading ? (
-                  <>
-                    <Loader2 className="mr-1.5 size-3.5 animate-spin" />
-                    {t("ob.photo.uploading")}
-                  </>
-                ) : (
-                  <>
-                    <Camera className="mr-1.5 size-3.5" />
-                    {t("ob.photo.upload")}
-                  </>
-                )}
-              </Button>
-            )}
-            <input
-              ref={photo.inputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => photo.pick(e.target.files?.[0])}
-            />
-            <p className="text-xs text-muted-foreground">{t("ld.photoHelp")}</p>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -1119,6 +1283,16 @@ function ListingDialog({
               placeholder={t("ld.desc.ph")}
               rows={3}
             />
+            {catalogue?.descriptionHi && (
+              <div className="rounded-lg border border-border bg-secondary/50 px-3 py-2">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                  {t("ld.hindiReady")}
+                </p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  {catalogue.descriptionHi}
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
@@ -1373,6 +1547,16 @@ export default function Studio() {
     .reduce((sum, s) => sum + s.price * s.quantity, 0);
   const unitsSold = (sales ?? []).reduce((sum, s) => sum + s.quantity, 0);
 
+  // The seven steps, all still ahead — so artisans see exactly what Sell with
+  // AI will do for them before they start.
+  const idleSteps = SELL_AI_STEPS.reduce(
+    (acc, step) => {
+      acc[step.key] = "todo";
+      return acc;
+    },
+    {} as Record<SellStepKey, SellStepState>,
+  );
+
   const handleRetire = (listingId: string) => {
     retireProduct({ productId: listingId as Id<"products"> })
       .then(() => toast.success(t("stm.retiredToast")))
@@ -1412,8 +1596,34 @@ export default function Studio() {
               className="shadow-soft"
               onClick={() => setDialog({ mode: "create" })}
             >
-              <Plus className="size-4" /> {t("stm.newListing")}
+              <Sparkles className="size-4" /> {t("stm.sellai.cta")}
             </Button>
+          </div>
+        </div>
+
+        {/* Sell with AI — the platform's flagship flow, front and centre */}
+        <div className="mt-8 rounded-2xl border border-primary/25 bg-primary/5 p-5 sm:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="max-w-2xl">
+              <SellWithAiBadge />
+              <h2 className="mt-2.5 font-display text-xl font-semibold tracking-tight sm:text-2xl">
+                {t("stm.sellai.title")}
+              </h2>
+              <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
+                {t("stm.sellai.sub")}
+              </p>
+            </div>
+            <Button
+              size="lg"
+              className="rounded-full shadow-soft"
+              onClick={() => setDialog({ mode: "create" })}
+            >
+              <Sparkles className="size-4" />
+              {t("stm.sellai.cta")}
+            </Button>
+          </div>
+          <div className="mt-4 rounded-xl border border-border/70 bg-card p-3.5">
+            <SellWithAiTracker states={idleSteps} />
           </div>
         </div>
 
@@ -1455,7 +1665,7 @@ export default function Studio() {
               {t("stm.sales.empty")}
             </p>
             <Button onClick={() => setDialog({ mode: "create" })} className="rounded-full">
-              <Plus className="size-4" /> {t("stm.newListing")}
+              <Sparkles className="size-4" /> {t("stm.sellai.cta")}
             </Button>
           </div>
         ) : (

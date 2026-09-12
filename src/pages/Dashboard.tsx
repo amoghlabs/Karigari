@@ -161,6 +161,27 @@ export default function Dashboard() {
           ))}
         </div>
 
+        {/* Sell with AI — the platform's core pitch for anyone who makes things */}
+        {studio === null && (
+          <Link
+            to="/studio"
+            className="group mt-6 flex flex-wrap items-center gap-4 rounded-2xl border border-primary/25 bg-primary/5 p-5 transition-colors hover:bg-primary/10"
+          >
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <Sparkles className="size-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="font-display text-base font-semibold tracking-tight">
+                {t("dash.sellai.title")}
+              </span>
+              <span className="mt-0.5 block text-sm leading-6 text-muted-foreground">
+                {t("dash.sellai.sub")}
+              </span>
+            </span>
+            <ArrowRight className="size-4 shrink-0 text-primary opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
+          </Link>
+        )}
+
         {/* Studio CTA / summary */}
         {studio !== undefined && studio !== null && (
           <Link

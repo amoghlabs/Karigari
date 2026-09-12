@@ -12,6 +12,7 @@ export type ProductCardProduct = {
   _id: string;
   title: string;
   description: string;
+  descriptionHi?: string;
   category: string;
   price: number;
   imageUrl: string;

@@ -110,14 +110,52 @@ export default function MakerStorefront() {
               <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_2fr]">
                 <aside className="h-fit rounded-xl border border-border/70 bg-card p-6 shadow-soft lg:sticky lg:top-24">
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-                    {t("mf.studio")}
+                    {t("mf.meet")}
                   </p>
+                  <div className="mt-3 flex items-center gap-3">
+                    {maker.image ? (
+                      <img
+                        src={maker.image}
+                        alt={maker.shopName}
+                        className="size-14 rounded-xl border border-border object-cover"
+                      />
+                    ) : (
+                      <span className="flex size-14 items-center justify-center rounded-xl bg-primary/10 font-display text-lg font-semibold text-primary">
+                        {maker.shopName.charAt(0)}
+                      </span>
+                    )}
+                    <div className="min-w-0">
+                      <p className="truncate font-display text-base font-semibold tracking-tight">
+                        {maker.shopName}
+                      </p>
+                      <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                        <MapPin className="size-3" />
+                        {maker.location}
+                      </p>
+                    </div>
+                  </div>
                   <p className="mt-3 text-sm leading-6 text-muted-foreground">
                     {maker.bio}
                   </p>
-                  <p className="mt-4 border-l-2 border-primary/30 pl-4 text-sm italic leading-7 text-muted-foreground">
-                    {maker.story}
-                  </p>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {makerCrafts.map((c) => (
+                      <span
+                        key={c}
+                        className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] font-medium text-muted-foreground"
+                      >
+                        {categoryName(c, lang)}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="mt-5 border-t border-border/60 pt-5">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+                      {t("mf.craftStory")}
+                    </p>
+                    <p className="mt-2.5 border-l-2 border-primary/30 pl-4 text-sm italic leading-7 text-muted-foreground">
+                      {maker.story}
+                    </p>
+                  </div>
                 </aside>
 
                 <div>

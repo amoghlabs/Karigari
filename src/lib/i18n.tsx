@@ -16,8 +16,8 @@ const DICT: Dict = {
   /* Brand */
   "brand.name": { en: "कारीgari", hi: "कारीगरी" },
   "brand.tagline": {
-    en: "Buy straight from the artisan",
-    hi: "सीधे कारीगर से खरीदें",
+    en: "Sell with AI, buy from the maker",
+    hi: "AI से बेचिए, कारीगर से खरीदिए",
   },
 
   /* Language toggle */
@@ -28,6 +28,7 @@ const DICT: Dict = {
   /* Header nav */
   "nav.shop": { en: "Market", hi: "बाज़ार" },
   "nav.artisans": { en: "For artisans", hi: "कारीगरों के लिए" },
+  "nav.sellWithAi": { en: "Sell with AI", hi: "AI से बेचिए" },
   "nav.bag": { en: "Your bag", hi: "आपकी थैली" },
   "nav.account": { en: "Account", hi: "खाता" },
   "nav.orders": { en: "Orders", hi: "ऑर्डर" },
@@ -43,20 +44,20 @@ const DICT: Dict = {
     hi: "कारीगर के हाथों — और शब्दों — से सीधे आप तक।",
   },
   "hero.badge": {
-    en: "900+ artisan studios · zero middlemen",
-    hi: "900+ कारीगर स्टूडियो · कोई बिचौलिया नहीं",
+    en: "Sell with AI · a photo and your voice is all it takes",
+    hi: "AI से बेचिए · बस एक फ़ोटो और आपकी आवाज़ काफ़ी है",
   },
   "hero.title1": { en: "Buy straight from", hi: "सीधे कारीगर से" },
   "hero.title2": { en: "the artisan's hands", hi: "कारीगर के हाथों से खरीदें" },
   "hero.subtitle": {
-    en: "कारीगरी is the craft of the hands. कारीgari connects you directly with the potters, weavers and block printers of India — every piece ships from the workshop it was made in.",
-    hi: "कारीगरी हाथों का हुनर है। कारीgari आपको भारत के कुम्हारों, बुनकरों और छापेकारों से सीधे जोड़ता है — हर चीज़ उसी कारखाने से आती है जहाँ वह बनी है।",
+    en: "Not another handicraft marketplace. कारीgari removes the digital barrier for artisans — the forms, the photos, the English, the pricing. Anyone who can take a photo and speak about their craft can sell online, and every piece still ships from the bench it was made on.",
+    hi: "यह सिर्फ़ एक और हस्तशिल्प बाज़ार नहीं है। कारीgari कारीगरों के रास्ते से डिजिटल दीवार हटा देता है — फ़ॉर्म, फ़ोटो, अंग्रेज़ी, दाम तय करना। जो एक फ़ोटो ले सके और अपने हुनर के बारे में बोल सके, वह ऑनलाइन बेच सकता है — और हर चीज़ उसी कारखाने से भेजी जाती है जहाँ वह बनी।",
   },
   "hero.cta.shop": { en: "Explore the market", hi: "बाज़ार देखें" },
-  "hero.cta.sell": { en: "Sell your craft", hi: "अपना हुनर बेचें" },
-  "hero.point1": { en: "Studio-to-door shipping", hi: "स्टूडियो से सीधे घर तक" },
-  "hero.point2": { en: "Small-batch materials", hi: "थोड़ी मात्रा में, हाथ से बनी" },
-  "hero.point3": { en: "Made by a real person", hi: "असली कारीगर के हाथ से बनी" },
+  "hero.cta.sell": { en: "Sell with AI", hi: "AI से बेचिए" },
+  "hero.point1": { en: "A photo and your voice, nothing else", hi: "बस एक फ़ोटो और आपकी आवाज़" },
+  "hero.point2": { en: "Studio-to-door, zero middlemen", hi: "स्टूडियो से घर तक, कोई बिचौलिया नहीं" },
+  "hero.point3": { en: "Every rupee reaches the maker", hi: "हर रुपया कारीगर तक पहुँचता है" },
 
   /* Landing sections */
   "sec.latest.eyebrow": { en: "Fresh from the kiln", hi: "आँवे से ताज़ा" },
@@ -99,15 +100,64 @@ const DICT: Dict = {
   "stat.direct": { en: "Sold by the maker", hi: "कारीगर द्वारा बेची गईं" },
   "stat.middlemen": { en: "Middlemen", hi: "बिचौलिए" },
   "sec.cta.title": {
-    en: "Make things for a living, not for a platform",
-    hi: "किसी प्लेटफ़ॉर्म के लिए नहीं, अपने पेट के लिए बनाइए",
+    en: "You don't need a computer, a website or English",
+    hi: "आपको न कंप्यूटर चाहिए, न वेबसाइट, न अंग्रेज़ी",
   },
   "sec.cta.sub": {
-    en: "Open your studio in minutes — no paperwork, no tech skills needed. Tell your story with your voice, and we'll write it down for you.",
-    hi: "मिनटों में अपना स्टूडियो खोलें — न कागज़ी काम, न तकनीकी ज्ञान। अपनी कहानी अपनी आवाज़ में सुनाइए, हम उसे लिख देंगे।",
+    en: "The digital barrier is why master artisans stay offline. Sell with AI takes it away: one photo and a few words in your own language, and your piece is described, translated, priced and live — usually in under a minute.",
+    hi: "डिजिटल दीवार ही वजह है कि उस्ताद कारीगर ऑनलाइन नहीं आ पाते। Sell with AI उसे हटा देता है: एक फ़ोटो और अपनी भाषा में कुछ शब्द — बस, फिर आपकी चीज़ का विवरण, अनुवाद, दाम सब तैयार और लाइव — अक्सर एक मिनट से भी कम में।",
   },
-  "sec.cta.button": { en: "Open your studio", hi: "अपना स्टूडियो खोलें" },
-  "sec.cta.secondary": { en: "See what sells", hi: "क्या बिकता है देखें" },
+  "sec.cta.button": { en: "Start selling with AI", hi: "AI से बेचना शुरू करें" },
+  "sec.cta.secondary": { en: "See what's live", hi: "क्या लाइव है देखें" },
+
+  /* Sell with AI — the flagship flow */
+  "sellai.eyebrow": { en: "Sell with AI", hi: "AI से बेचिए" },
+  "sellai.title": {
+    en: "Sell with AI. A photo and your voice — we do the rest.",
+    hi: "Sell with AI। एक फ़ोटो और आपकी आवाज़ — बाक़ी सब हम करते हैं।",
+  },
+  "sellai.sub": {
+    en: "Listing online normally needs forms, studio lighting, English and a guess at pricing — which is exactly why so many artisans never start. Sell with AI runs that whole production line for you and shows you each step happening.",
+    hi: "ऑनलाइन सूची बनाने के लिए आम तौर पर फ़ॉर्म, स्टूडियो लाइट, अंग्रेज़ी और दाम का अंदाज़ा चाहिए — इसी वजह से बहुत से कारीगर शुरू ही नहीं कर पाते। Sell with AI यह पूरी प्रक्रिया आपके लिए चलाता है और हर क़दम आपको दिखाता है।",
+  },
+  "sellai.do1": {
+    en: "Take one photo of your piece on your phone — that bit is still yours.",
+    hi: "अपने फ़ोन से चीज़ की एक फ़ोटो लीजिए — बस यही काम आपका है।",
+  },
+  "sellai.do2": {
+    en: "Say a few words about it in Hindi, Marathi, Tamil — whatever you speak.",
+    hi: "उसके बारे में कुछ शब्द बोलिए — हिंदी, मराठी, तमिल, जो भी आप बोलते हैं।",
+  },
+  "sellai.rest": {
+    en: "Everything else — enhancing, writing, translating, categorising, pricing, publishing — AI does for you.",
+    hi: "बाक़ी सब — फ़ोटो सुधारना, विवरण लिखना, अनुवाद, श्रेणी, दाम और प्रकाशन — AI आपके लिए करता है।",
+  },
+  "sellai.cta": { en: "Start selling with AI", hi: "AI से बेचना शुरू करें" },
+  "sellai.cta2": { en: "See what it produces", hi: "यह क्या बनाता है देखें" },
+  "sellai.pipeline": {
+    en: "The pipeline, start to finish",
+    hi: "पूरी प्रक्रिया, शुरू से आख़िर तक",
+  },
+  "sellai.live": { en: "Live", hi: "लाइव" },
+  "sellai.note": {
+    en: "No forms. No English. No website. Two taps from you.",
+    hi: "न फ़ॉर्म, न अंग्रेज़ी, न वेबसाइट। आपकी तरफ़ से बस दो काम।",
+  },
+
+  /* Sell with AI — the seven steps */
+  "swa.step.photo": { en: "Take or upload a photo", hi: "फ़ोटो खींचें या अपलोड करें" },
+  "swa.step.voice": { en: "Speak about the piece", hi: "चीज़ के बारे में बोलिए" },
+  "swa.step.enhance": { en: "AI enhances your photo", hi: "AI आपकी फ़ोटो सुधारता है" },
+  "swa.step.write": { en: "AI writes the description", hi: "AI विवरण लिखता है" },
+  "swa.step.translate": { en: "AI translates it", hi: "AI उसका अनुवाद करता है" },
+  "swa.step.price": { en: "AI suggests a category & fair price", hi: "AI श्रेणी और सही दाम सुझाता है" },
+  "swa.step.live": { en: "Your piece goes live", hi: "आपकी चीज़ लाइव हो जाती है" },
+  "swa.working": { en: "now", hi: "अभी" },
+  "swa.work.enhance": { en: "Enhancing your photo…", hi: "आपकी फ़ोटो सुधर रही है…" },
+  "swa.work.write": { en: "Writing your description…", hi: "आपका विवरण लिखा जा रहा है…" },
+  "swa.work.translate": { en: "Translating it…", hi: "अनुवाद हो रहा है…" },
+  "swa.work.price": { en: "Working out a fair price…", hi: "सही दाम तय किया जा रहा है…" },
+  "swa.work.live": { en: "Publishing your piece…", hi: "आपकी चीज़ प्रकाशित हो रही है…" },
 
   /* Shop */
   "shop.title": { en: "The market", hi: "बाज़ार" },
@@ -325,6 +375,14 @@ const DICT: Dict = {
   "dash.live": { en: "your studio is live", hi: "आपका स्टूडियो लाइव है" },
   "dash.new": { en: "New from the studios", hi: "स्टूडियो से नई चीज़ें" },
   "dash.seeAll": { en: "See all", hi: "सभी देखें" },
+  "dash.sellai.title": {
+    en: "Make things? Sell them with AI.",
+    hi: "कुछ बनाते हैं? AI से बेचिए।",
+  },
+  "dash.sellai.sub": {
+    en: "One photo and a few words in your language is all it takes — AI writes, translates, prices and publishes your piece.",
+    hi: "बस एक फ़ोटो और अपनी भाषा में कुछ शब्द — AI विवरण लिखता, अनुवाद करता, दाम तय करता और आपकी चीज़ प्रकाशित कर देता है।",
+  },
 
   /* Studio — auth / onboarding */
   "st.title": { en: "Artisan studio", hi: "कारीगर स्टूडियो" },
@@ -420,6 +478,15 @@ const DICT: Dict = {
     hi: "अभी कोई बिक्री नहीं — अपना स्टूडियो लिंक बाँटिए, ऑर्डर यहाँ दिखेंगे।",
   },
   "stm.newListing": { en: "New listing", hi: "नई सूची" },
+  "stm.sellai.title": {
+    en: "Your next piece can be live in about a minute",
+    hi: "आपकी अगली चीज़ लगभग एक मिनट में लाइव हो सकती है",
+  },
+  "stm.sellai.sub": {
+    en: "Sell with AI takes one photo and a few words from you, then enhances the photo, writes the description, translates it, picks the category and suggests a fair price. You stay in charge of every word — AI just does the typing.",
+    hi: "Sell with AI आपसे एक फ़ोटो और कुछ शब्द लेता है — फिर फ़ोटो सुधारता, विवरण लिखता, अनुवाद करता, श्रेणी चुनता और सही दाम सुझाता है। हर शब्द पर आपका ही हक़ रहता है — AI सिर्फ़ टाइपिंग का काम करता है।",
+  },
+  "stm.sellai.cta": { en: "Sell with AI", hi: "AI से बेचिए" },
   "stm.profile": { en: "Studio profile", hi: "स्टूडियो प्रोफ़ाइल" },
   "stm.live": { en: "Live", hi: "लाइव" },
   "stm.retired": { en: "Retired", hi: "हटाई गई" },
@@ -464,6 +531,32 @@ const DICT: Dict = {
     en: "Smart catalogue fills the name, category, materials, colors, size, tags and description from what you said and your photo.",
     hi: "स्मार्ट कैटलॉग आपके बोले शब्दों और फ़ोटो से नाम, श्रेणी, सामग्री, रंग, नाप, टैग और विवरण भर देता है।",
   },
+  "ld.sellWithAi": { en: "Sell with AI", hi: "AI से बेचिए" },
+  "ld.sellWithAiSub": {
+    en: "Two things from you — a photo and a few spoken words. AI does the other five steps.",
+    hi: "आपकी तरफ़ से दो चीज़ें — एक फ़ोटो और कुछ बोले हुए शब्द। बाक़ी पाँच क़दम AI करता है।",
+  },
+  "ld.sellRun": { en: "Sell with AI", hi: "AI से बेचिए" },
+  "ld.sellRunning": { en: "AI is working…", hi: "AI काम कर रहा है…" },
+  "ld.sellNeedsInput": {
+    en: "Add a photo or say a few words about your piece first.",
+    hi: "पहले फ़ोटो जोड़ें या अपनी चीज़ के बारे में कुछ बोलिए।",
+  },
+  "ld.sellDone": {
+    en: "Filled from your photo and voice — check anything and edit freely.",
+    hi: "आपकी फ़ोटो और आवाज़ से भर दिया — जो चाहें जाँचें और बदलें।",
+  },
+  "ld.sellLive": { en: "Your piece is live 🎉", hi: "आपकी चीज़ लाइव है 🎉" },
+  "ld.sellStepNow": { en: "Step {n} of 7", hi: "7 में से क़दम {n}" },
+  "ld.priceSuggest": { en: "AI suggests {price}", hi: "AI {price} सुझाता है" },
+  "ld.priceWhy": { en: "Why this price", hi: "यह दाम क्यों" },
+  "ld.usePrice": { en: "Use this price", hi: "यह दाम रखें" },
+  "ld.priceApplied": { en: "This price is applied", hi: "यह दाम लगा हुआ है" },
+  "ld.hindiReady": { en: "Hindi version", hi: "हिंदी अनुवाद" },
+  "ld.enhanceHint": {
+    en: "AI does this for you when you tap Sell with AI.",
+    hi: "Sell with AI दबाने पर AI यह ख़ुद कर देता है।",
+  },
   "ld.colors": { en: "Colors (comma-separated)", hi: "रंग (अल्पविराम से अलग करें)" },
   "ld.colors.ph": { en: "Indigo, terracotta", hi: "नील, गेरुआ" },
   "ld.dimensions": { en: "Size", hi: "नाप" },
@@ -471,7 +564,11 @@ const DICT: Dict = {
   "ld.tags": { en: "Search tags (comma-separated)", hi: "खोज टैग (अल्पविराम से अलग करें)" },
   "ld.tags.ph": { en: "diya, clay, festival", hi: "दिया, मिट्टी, त्योहार" },
   "pd.story.title": { en: "The story behind this piece", hi: "इस चीज़ के पीछे की कहानी" },
+  "pd.meet.title": { en: "Meet the artisan", hi: "कारीगर से मिलिए" },
+  "pd.meet.made": { en: "Made by hand in", hi: "हाथ से बनी —" },
   "pd.maker.crafts": { en: "Also works in", hi: "और भी हुनर" },
+  "mf.meet": { en: "Meet the artisan", hi: "कारीगर से मिलिए" },
+  "mf.craftStory": { en: "The craft story", hi: "हुनर की कहानी" },
   "mf.craftsLabel": { en: "Crafts", hi: "हुनर" },
   "stm.craftsHint": { en: "Tap all that apply — you can sell under several crafts.", hi: "जो लागू हों सभी दबाएँ — आप कई हुनरों में बेच सकते हैं।" },
   "ld.materials": { en: "Materials (comma-separated)", hi: "सामग्री (अल्पविराम से अलग करें)" },
@@ -518,12 +615,12 @@ const DICT: Dict = {
   "auth.otp.tryAgain": { en: "Try again", hi: "फिर कोशिश करें" },
   "auth.otp.different": { en: "Use different email", hi: "दूसरा ईमेल इस्तेमाल करें" },
   "auth.artisan.pitch": {
-    en: "Sell your craft directly. Verify with your phone — the whole studio opens in less than a minute.",
-    hi: "अपना हुनर सीधे बेचिए। फ़ोन से सत्यापन — पूरा स्टूडियो एक मिनट में खुल जाता है।",
+    en: "Verify with your phone, then Sell with AI: one photo and a few spoken words put your piece in front of buyers — described, translated, priced and live.",
+    hi: "फ़ोन से सत्यापन कीजिए, फिर Sell with AI: एक फ़ोटो और कुछ बोले हुए शब्द — आपकी चीज़ विवरण, अनुवाद और दाम के साथ खरीदारों के सामने लाइव हो जाती है।",
   },
   "auth.buy.pitch": {
-    en: "Buy handmade Indian craft straight from the artisan who made it.",
-    hi: "हस्तनिर्मित भारतीय शिल्प सीधे उसी कारीगर से खरीदें जिसने बनाया है।",
+    en: "Buy handmade pieces straight from the maker — and see the artisan behind every one.",
+    hi: "हाथ से बनी चीज़ें सीधे कारीगर से खरीदें — और हर चीज़ के पीछे के कारीगर से मिलिए।",
   },
   "auth.footer": { en: "Secured by", hi: "सुरक्षा" },
 
@@ -534,8 +631,8 @@ const DICT: Dict = {
 
   /* Footer */
   "footer.blurb": {
-    en: "A marketplace with no middlemen. Every piece ships straight from the workshop bench where it was made, and every rupee goes to the artisan.",
-    hi: "बिना बिचौलिये का बाज़ार। हर चीज़ उसी कार्यशाला से सीधे आती है जहाँ वह बनी है, और हर रुपया कारीगर के पास जाता है।",
+    en: "A platform built to remove the digital barrier for artisans. Take a photo, say a few words in your own language, and AI describes, translates, prices and publishes your piece — every rupee going straight to the maker.",
+    hi: "कारीगरों के रास्ते से डिजिटल दीवार हटाने के लिए बना प्लेटफ़ॉर्म। एक फ़ोटो लीजिए, अपनी भाषा में कुछ बोलिए — AI विवरण लिखता, अनुवाद करता, दाम तय करता और चीज़ प्रकाशित कर देता है। हर रुपया सीधे कारीगर के पास।",
   },
   "footer.shop": { en: "Shop", hi: "खरीदारी" },
   "footer.browseAll": { en: "Browse all", hi: "सभी देखें" },
