@@ -4,7 +4,7 @@
 
 > Not another handicraft marketplace — a platform that removes the digital barrier for Indian artisans.
 
-Built for Smart India Hackathon (SIH) — internal round.
+Built for Smart India Hackathon (SIH)
 
 ---
 
