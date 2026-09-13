@@ -1,3 +1,7 @@
+# कारीgari — Agent Instructions
+
+कारीgari is an AI-powered marketplace that removes the digital barrier for Indian artisans: a photo and a voice note become an enhanced image, a translated description, and a fair, explained price, with no manual listing work required from the artisan.
+
 ## Overview
 
 This project uses the following tech stack:
