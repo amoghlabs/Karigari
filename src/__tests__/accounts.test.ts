@@ -10,6 +10,7 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
+import { normalizePhone } from "../convex/phoneOtp";
 import { seed } from "../convex/seed";
 
 const convexFile = (name: string) =>
@@ -42,6 +43,36 @@ describe("seeded artisan identities (seed.ts)", () => {
     for (const region of ["Rajasthan", "Uttar Pradesh", "Gujarat", "Odisha"]) {
       expect(places).toContain(region);
     }
+  });
+});
+
+describe("phone numbers canonicalise to one key", () => {
+  test("a 10-digit Indian mobile becomes +91", () => {
+    expect(normalizePhone("9876543210")).toBe("+919876543210");
+  });
+
+  test("every common way of typing the same number maps to one value", () => {
+    const forms = [
+      "9876543210",
+      "+91 98765 43210",
+      "98765-43210",
+      "919876543210",
+      "+91-9876543210",
+      "  9876543210  ",
+    ];
+    const normalized = forms.map(normalizePhone);
+    expect(new Set(normalized).size).toBe(1);
+    expect(normalized[0]).toBe("+919876543210");
+  });
+
+  test("international numbers keep their country code", () => {
+    expect(normalizePhone("+1 415 555 0132")).toBe("+14155550132");
+  });
+
+  test("nonsense and too-short input is rejected", () => {
+    expect(() => normalizePhone("12345")).toThrow();
+    expect(() => normalizePhone("not a phone")).toThrow();
+    expect(() => normalizePhone("")).toThrow();
   });
 });
 

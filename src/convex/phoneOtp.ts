@@ -5,7 +5,8 @@ import { mergeUsersInto } from "./accounts";
 
 const CODE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
-function normalizePhone(raw: string): string {
+/** Canonical Indian phone form, so one number always keys to one account. */
+export function normalizePhone(raw: string): string {
   const digits = raw.replace(/[^\d]/g, "");
   if (digits.length === 10) return `+91${digits}`; // Indian mobile
   if (digits.length === 12 && digits.startsWith("91")) return `+${digits}`;
