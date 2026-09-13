@@ -12,6 +12,7 @@ import { MapPin, Package, Store } from "lucide-react";
 type StorefrontMaker = ProductCardProduct & {
   products: ProductCardProduct[];
   shopName: string;
+  artisanName?: string;
   location: string;
   craft: string;
   crafts?: string[];
@@ -93,6 +94,11 @@ export default function MakerStorefront() {
                     <h1 className="font-display text-3xl font-semibold tracking-tight">
                       {maker.shopName}
                     </h1>
+                    {maker.artisanName && (
+                      <p className="mt-0.5 text-sm font-medium text-foreground/80">
+                        {t("mf.artisan")}: {maker.artisanName}
+                      </p>
+                    )}
                     <p className="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
                       <MapPin className="size-3.5" />
                       {maker.location} · {makerCrafts.map((c) => categoryName(c, lang)).join(", ")}
@@ -126,8 +132,13 @@ export default function MakerStorefront() {
                     )}
                     <div className="min-w-0">
                       <p className="truncate font-display text-base font-semibold tracking-tight">
-                        {maker.shopName}
+                        {maker.artisanName || maker.shopName}
                       </p>
+                      {maker.artisanName && (
+                        <p className="truncate text-xs font-medium text-muted-foreground">
+                          {maker.shopName}
+                        </p>
+                      )}
                       <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                         <MapPin className="size-3" />
                         {maker.location}

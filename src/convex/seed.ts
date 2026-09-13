@@ -14,6 +14,7 @@ type SeedProduct = {
 
 type SeedMaker = {
   shopName: string;
+  artisanName: string; // the maker's own name, shown in "Meet the artisan"
   bio: string;
   location: string;
   craft: string;
@@ -27,13 +28,14 @@ type SeedMaker = {
 export const seed: SeedMaker[] = [
   {
     shopName: "Mitti Kala",
+    artisanName: "Ramesh Prajapati",
     bio: "Wheel-thrown clay and Jaipur blue pottery from a family studio in the Pink City.",
     location: "Jaipur, Rajasthan",
     craft: "Pottery & Terracotta",
     story:
       "Three generations of our family have worked the same wheel in the same courtyard. The clay comes from the beds of the Banganga river, sieved, wedged and thrown by hand. Our blue pottery follows the old Jaipur recipe — quartz, multani mitti and gum — painted with cobalt and finished after a slow wood firing. Every pot that leaves here has been turned, dried, burned and checked by hand.",
     image:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&crop=faces",
+      "https://images.unsplash.com/photo-1607867810523-d10955f2a8df?w=200&h=200&fit=crop&crop=faces",
     coverImage:
       "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=1200&h=500&fit=crop",
     isFeatured: true,
@@ -104,13 +106,14 @@ export const seed: SeedMaker[] = [
   },
   {
     shopName: "Varanasi Vastra",
+    artisanName: "Shyam Lal Ansari",
     bio: "Handloom silk and cotton from the old weaving quarters of Banaras.",
     location: "Varanasi, Uttar Pradesh",
     craft: "Handloom Textiles",
     story:
       "The loom in our house is older than anyone can remember. We weave the way Banaras has always woven — silk and cotton threaded by hand, the weft beaten with a wooden comb until the cloth is firm and heavy. A single dupatta can take four days of sitting at the loom. We sell directly, so the price you pay is the price the weaver asked — nothing added in between.",
     image:
-      "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=200&h=200&fit=crop&crop=faces",
+      "https://images.unsplash.com/photo-1788015737547-c54a34cbd562?w=200&h=200&fit=crop&crop=faces",
     coverImage:
       "https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=1200&h=500&fit=crop",
     isFeatured: true,
@@ -181,13 +184,14 @@ export const seed: SeedMaker[] = [
   },
   {
     shopName: "Ajrakh House",
+    artisanName: "Sufiyan Khatri",
     bio: "Hand block-printed fabric in natural indigo and madder, from the Kutch desert.",
     location: "Bhuj, Gujarat",
     craft: "Block Printing",
     story:
       "Block printing came to our family from Sindh three generations ago. Every cloth is printed with hand-carved teak blocks: the resist painted by hand, the indigo vat dipped again and again, the madder boiled for colour. One ajrakh cloth passes through fourteen stages and fourteen hands. We keep the old designs — the stars, the borders, the river patterns — because they carry meaning older than any one printer.",
     image:
-      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=faces",
+      "https://images.unsplash.com/photo-1775669954911-fc68d9deae84?w=200&h=200&fit=crop&crop=faces",
     coverImage:
       "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=1200&h=500&fit=crop",
     isFeatured: true,
@@ -258,13 +262,14 @@ export const seed: SeedMaker[] = [
   },
   {
     shopName: "Kundan Kala",
+    artisanName: "Mohan Lal Soni",
     bio: "Kundan, meenakari and thewa jewellery set by hand in the Jaipur tradition.",
     location: "Jaipur, Rajasthan",
     craft: "Jewelry",
     story:
       "Our family has set jewellery in the Jaipur karkhana style for four generations — pure gold and silver, stones set in kundan rather than prongs, enamel added in the meenakari tradition. Nothing is machine-cast. Each piece is built up bead by bead, checked under the loupe, and worn proudly by the people of this city before it is ever sold to anyone else.",
     image:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=faces",
+      "https://images.unsplash.com/photo-1649349106167-91456fd56f5c?w=200&h=200&fit=crop&crop=faces",
     coverImage:
       "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1200&h=500&fit=crop",
     isFeatured: false,
@@ -335,13 +340,14 @@ export const seed: SeedMaker[] = [
   },
   {
     shopName: "Sahariya Woodcraft",
+    artisanName: "Ramlal Sahariya",
     bio: "Hand-carved wood from the forest craftspeople of Bundelkhand.",
     location: "Chhatarpur, Madhya Pradesh",
     craft: "Woodwork",
     story:
       "We are Sahariya carvers — the forest people of Bundelkhand. Our wood is seasoned teak and mango, cut by hand and carved with tools older than the town. Nothing is sanded to a factory shine; you can see the chisel's path in every curve. A bowl we carve today will be oiled, used, and still in a kitchen fifty years from now.",
     image:
-      "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&h=200&fit=crop&crop=faces",
+      "https://images.unsplash.com/photo-1753185234794-e3b41b94a352?w=200&h=200&fit=crop&crop=faces",
     coverImage:
       "https://images.unsplash.com/photo-1416339306562-f3d12fefd36f?w=1200&h=500&fit=crop",
     isFeatured: false,
@@ -412,13 +418,14 @@ export const seed: SeedMaker[] = [
   },
   {
     shopName: "Dhokra Murtikar",
+    artisanName: "Bijay Maharana",
     bio: "Lost-wax brass casting from the tribal craft villages of Odisha.",
     location: "Bhubaneswar, Odisha",
     craft: "Metalwork",
     story:
       "Dhokra is older than history — the lost-wax method our village uses was casting bronze in the Indus valley five thousand years ago. Every figure begins as a wax model, wrapped in clay, fired until the wax melts away, then filled with molten brass. What comes out is never perfect and never the same twice — and that is exactly what we sell.",
     image:
-      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop&crop=faces",
+      "https://images.unsplash.com/photo-1694438058376-f7af2f661ac2?w=200&h=200&fit=crop&crop=faces",
     coverImage:
       "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?w=1200&h=500&fit=crop",
     isFeatured: false,
@@ -489,13 +496,14 @@ export const seed: SeedMaker[] = [
   },
   {
     shopName: "Bans Kala",
+    artisanName: "Malati Bora",
     bio: "Bamboo and cane woven in the hill workshops of the Northeast.",
     location: "Guwahati, Assam",
     craft: "Bamboo & Cane",
     story:
       "In Assam, bamboo is called 'green gold', and our family has woven it for as long as anyone remembers. We split the culms by hand, soak and bend them over fire, and weave them while they are still supple. Baskets, bags and furniture from our workshop are used for years — and when one finally wears out, it goes back to the earth.",
     image:
-      "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=200&h=200&fit=crop&crop=faces",
+      "https://images.unsplash.com/photo-1759738101532-0c2726bf68af?w=200&h=200&fit=crop&crop=faces",
     coverImage:
       "https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1200&h=500&fit=crop",
     isFeatured: false,
@@ -577,10 +585,11 @@ export const seedCatalog = internalMutation({
   args: {},
   handler: async (ctx) => {
     // If the catalog is already current (every seed title present with the
-    // matching image), leave it alone — refreshing on every landing mount
-    // would orphan carts and favorites that reference the previous seed's
-    // product ids. Image-only seed updates still propagate because we
-    // compare each seed product's imageUrl against the stored one.
+    // matching image, and every seed artisan carrying the right portrait and
+    // name), leave it alone — refreshing on every landing mount would orphan
+    // carts and favorites that reference the previous seed's product ids.
+    // Image/name-only seed updates still propagate because we compare each
+    // stored row against the seed.
     const expectedByTitle = new Map(
       seed.flatMap((m) => m.products.map((p) => [p.title, p.imageUrl] as const)),
     );
@@ -592,6 +601,27 @@ export const seedCatalog = internalMutation({
       if (!current || current.imageUrl !== imageUrl) {
         stale = true;
         break;
+      }
+    }
+    // The artisan portraits/names must be current too — a seed that only
+    // changed portraits would otherwise never reach an existing deployment.
+    if (!stale) {
+      const seededMakers = (await ctx.db.query("makers").collect()).filter(
+        (m) => !m.userId,
+      );
+      const byShop = new Map(seededMakers.map((m) => [m.shopName, m] as const));
+      for (const m of seed) {
+        const current = byShop.get(m.shopName);
+        if (
+          !current ||
+          current.image !== m.image ||
+          current.artisanName !== m.artisanName ||
+          current.location !== m.location ||
+          current.craft !== m.craft
+        ) {
+          stale = true;
+          break;
+        }
       }
     }
     if (!stale) return;
@@ -622,6 +652,7 @@ export const seedCatalog = internalMutation({
     for (const m of seed) {
       const makerId = await ctx.db.insert("makers", {
         shopName: m.shopName,
+        artisanName: m.artisanName,
         bio: m.bio,
         location: m.location,
         craft: m.craft,

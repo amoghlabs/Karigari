@@ -48,9 +48,12 @@ const schema = defineSchema(
       emailVerificationTime: v.optional(v.number()), // email verification time. do not remove
       isAnonymous: v.optional(v.boolean()), // is the user anonymous. do not remove
       phone: v.optional(v.string()), // artisan phone number (OTP verified)
+      phoneVerificationTime: v.optional(v.number()), // when the phone was OTP verified
 
       role: v.optional(roleValidator), // role of the user. do not remove
-    }).index("email", ["email"]), // index for the email. do not remove or modify
+    })
+      .index("email", ["email"]) // index for the email. do not remove or modify
+      .index("phone", ["phone"]), // one account per verified phone number
 
     // ---------- कारीgari ----------
 
@@ -58,6 +61,7 @@ const schema = defineSchema(
     makers: defineTable({
       userId: v.optional(v.id("users")),
       shopName: v.string(),
+      artisanName: v.optional(v.string()), // the maker's own name, shown in "Meet the artisan"
       bio: v.string(),
       location: v.string(),
       craft: v.string(), // primary craft, e.g. "Pottery & Terracotta"

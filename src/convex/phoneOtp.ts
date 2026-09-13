@@ -1,6 +1,7 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { mergeUsersInto } from "./accounts";
 
 const CODE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
@@ -42,7 +43,15 @@ export const requestPhoneOtp = mutation({
   },
 });
 
-/** Verifies the OTP and marks the signed-in user as an artisan. */
+/**
+ * Verifies the OTP and marks the signed-in user as an artisan.
+ *
+ * One phone number always resolves to one account: if this number already
+ * belongs to an earlier account (from a previous login, or a duplicate created
+ * while testing), that account's studio, listings and order history are folded
+ * into the current one before the phone is attached. Only when no account
+ * exists for the number does verification create a fresh artisan identity.
+ */
 export const verifyPhoneOtp = mutation({
   args: { phone: v.string(), code: v.string() },
   handler: async (ctx, { phone, code }) => {
@@ -60,7 +69,23 @@ export const verifyPhoneOtp = mutation({
     }
 
     await ctx.db.patch(row._id, { used: true });
-    await ctx.db.patch(userId, { phone: normalized, role: "artisan" as const });
+
+    // Returning artisan: bring the existing account (and any duplicates that
+    // share this number) over to the current session instead of starting fresh.
+    const existing = await ctx.db
+      .query("users")
+      .withIndex("phone", (q) => q.eq("phone", normalized))
+      .collect();
+    const duplicates = existing.filter((user) => user._id !== userId);
+    if (duplicates.length > 0) {
+      await mergeUsersInto(ctx, userId, duplicates);
+    }
+
+    await ctx.db.patch(userId, {
+      phone: normalized,
+      phoneVerificationTime: Date.now(),
+      role: "artisan" as const,
+    });
     return { ok: true };
   },
 });

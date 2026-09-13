@@ -31,6 +31,7 @@ type DetailProduct = ProductCardProduct & {
     | {
         _id: string;
         shopName: string;
+        artisanName?: string;
         location: string;
         craft: string;
         crafts?: string[];
@@ -192,8 +193,13 @@ export default function ProductDetail() {
                     )}
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-display text-base font-semibold tracking-tight">
-                        {product.maker.shopName}
+                        {product.maker.artisanName || product.maker.shopName}
                       </p>
+                      {product.maker.artisanName && (
+                        <p className="truncate text-xs font-medium text-muted-foreground">
+                          {product.maker.shopName}
+                        </p>
+                      )}
                       <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                         <MapPin className="size-3" />
                         {t("pd.meet.made")} {product.maker.location}

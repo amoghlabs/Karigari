@@ -20,6 +20,7 @@ export const myMaker = query({
 export const createMaker = mutation({
   args: {
     shopName: v.string(),
+    artisanName: v.optional(v.string()),
     craft: v.string(),
     crafts: v.optional(v.array(v.string())),
     location: v.string(),
@@ -57,6 +58,7 @@ export const createMaker = mutation({
     return ctx.db.insert("makers", {
       userId,
       shopName,
+      artisanName: args.artisanName?.trim() || undefined,
       craft: crafts[0],
       crafts,
       location: args.location.trim() || "Somewhere handmade",
@@ -74,11 +76,14 @@ export const updateMaker = mutation({
   args: {
     makerId: v.id("makers"),
     shopName: v.string(),
+    artisanName: v.optional(v.string()),
     craft: v.string(),
     crafts: v.optional(v.array(v.string())),
     location: v.string(),
     bio: v.string(),
     story: v.string(),
+    image: v.optional(v.string()),
+    imageStorageId: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -94,13 +99,21 @@ export const updateMaker = mutation({
     ).filter((c) => CATEGORIES.includes(c));
     const crafts = validCrafts.length > 0 ? validCrafts : [maker.craft];
 
+    // A freshly uploaded profile photo (or URL) replaces the current one.
+    const storedImage = args.imageStorageId
+      ? await ctx.storage.getUrl(args.imageStorageId)
+      : undefined;
+    const image = args.image?.trim() || storedImage || undefined;
+
     await ctx.db.patch(args.makerId, {
       shopName: args.shopName.trim() || maker.shopName,
+      artisanName: args.artisanName?.trim() || maker.artisanName,
       craft: crafts[0],
       crafts,
       location: args.location.trim() || maker.location,
       bio: args.bio.trim() || maker.bio,
       story: args.story.trim() || maker.story,
+      ...(image ? { image } : {}),
     });
     return { ok: true };
   },

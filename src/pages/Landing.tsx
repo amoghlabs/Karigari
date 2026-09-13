@@ -229,8 +229,13 @@ function Makers() {
                   )}
                   <div className="min-w-0">
                     <p className="truncate font-display text-base font-semibold tracking-tight">
-                      {maker.shopName}
+                      {maker.artisanName || maker.shopName}
                     </p>
+                    {maker.artisanName && (
+                      <p className="truncate text-xs font-medium text-muted-foreground">
+                        {maker.shopName}
+                      </p>
+                    )}
                     <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                       <MapPin className="size-3" />
                       {maker.location} · {maker.craft}

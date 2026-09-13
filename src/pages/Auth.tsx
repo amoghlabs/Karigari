@@ -54,6 +54,7 @@ function BuyFlow({ redirect }: { redirect: string }) {
   const { isLoading: authLoading, isAuthenticated, signIn } = useAuth();
   const { t } = useI18n();
   const navigate = useNavigate();
+  const consolidate = useMutation(api.accounts.consolidateMyAccount);
   const [step, setStep] = useState<"signIn" | { email: string }>("signIn");
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -61,9 +62,15 @@ function BuyFlow({ redirect }: { redirect: string }) {
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
+      // One email = one account. Fold any earlier account for this email (and
+      // its order history) into the one we just signed into, so "Track orders"
+      // comes back after a re-login.
+      consolidate({}).catch(() => {
+        /* non-fatal: sign-in itself already succeeded */
+      });
       navigate(redirect);
     }
-  }, [authLoading, isAuthenticated, navigate, redirect]);
+  }, [authLoading, isAuthenticated, navigate, redirect, consolidate]);
 
   const handleEmailSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -250,7 +257,7 @@ function BuyFlow({ redirect }: { redirect: string }) {
 }
 
 function ArtisanFlow() {
-  const { signIn } = useAuth();
+  const { signIn, isAuthenticated, isLoading: authLoading } = useAuth();
   const { t } = useI18n();
   const navigate = useNavigate();
   const requestPhoneOtp = useMutation(api.phoneOtp.requestPhoneOtp);
@@ -267,11 +274,15 @@ function ArtisanFlow() {
     setError(null);
     try {
       // Phone + OTP only: the session behind the scenes is anonymous —
-      // no email or password is ever asked of the artisan.
-      try {
-        await signIn("anonymous");
-      } catch {
-        /* already signed in */
+      // no email or password is ever asked of the artisan. If a session
+      // already exists, keep it: signing in anonymously again would start a
+      // fresh account and detach the artisan from their studio and orders.
+      if (!isAuthenticated) {
+        try {
+          await signIn("anonymous");
+        } catch {
+          /* session already exists */
+        }
       }
       const result = await requestPhoneOtp({ phone });
       setStep({ stage: "code", phone: result.phone, devCode: result.devCode });
@@ -330,7 +341,12 @@ function ArtisanFlow() {
               />
             </div>
             {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
-            <Button type="submit" size="lg" className="tap-lg mt-4 w-full rounded-full text-base" disabled={isLoading}>
+            <Button
+              type="submit"
+              size="lg"
+              className="tap-lg mt-4 w-full rounded-full text-base"
+              disabled={isLoading || authLoading}
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 size-4 animate-spin" />

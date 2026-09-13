@@ -66,11 +66,13 @@ import type { Id } from "@/convex/_generated/dataModel";
 type Maker = {
   _id: string;
   shopName: string;
+  artisanName?: string;
   bio: string;
   location: string;
   craft: string;
   crafts?: string[];
   story: string;
+  image?: string;
 };
 
 type Listing = {
@@ -204,7 +206,7 @@ function usePhoto() {
 /* ------------------------------------------------------------------ */
 
 function PhoneGate({ reason }: { reason: string }) {
-  const { signIn } = useAuth();
+  const { signIn, isAuthenticated, isLoading: authLoading } = useAuth();
   const { t } = useI18n();
   const requestPhoneOtp = useMutation(api.phoneOtp.requestPhoneOtp);
   const verifyPhoneOtp = useMutation(api.phoneOtp.verifyPhoneOtp);
@@ -220,10 +222,15 @@ function PhoneGate({ reason }: { reason: string }) {
     setIsLoading(true);
     setError(null);
     try {
-      try {
-        await signIn("anonymous");
-      } catch {
-        /* session already exists */
+      // Keep an existing session — signing in anonymously again would start a
+      // brand-new account and detach this artisan from their studio, listings
+      // and orders. A session is only created when there is none at all.
+      if (!isAuthenticated) {
+        try {
+          await signIn("anonymous");
+        } catch {
+          /* session already exists */
+        }
       }
       const result = await requestPhoneOtp({ phone });
       setNormalizedPhone(result.phone);
@@ -281,7 +288,12 @@ function PhoneGate({ reason }: { reason: string }) {
             />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button type="submit" size="lg" className="tap-lg w-full rounded-full text-base" disabled={isLoading}>
+          <Button
+            type="submit"
+            size="lg"
+            className="tap-lg w-full rounded-full text-base"
+            disabled={isLoading || authLoading}
+          >
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 size-4 animate-spin" />
@@ -398,6 +410,7 @@ function Onboarding() {
     try {
       await createMaker({
         shopName: generated.shopName,
+        artisanName: name,
         craft: crafts[0],
         crafts,
         location: locationInput || "",
@@ -765,8 +778,13 @@ function ListingDialog({
   const [saving, setSaving] = useState(false);
   const [stage, setStage] = useState<SellStage>("idle");
   const [catalogue, setCatalogue] = useState<CatalogueSummary | null>(null);
+  const [typedNote, setTypedNote] = useState("");
   const photoPreview = photo.preview ?? (isEdit ? (listing?.imageUrl ?? null) : null);
-  const voiceText = speech.transcript.trim();
+  // The artisan's own words, spoken or typed — both feed listing generation.
+  const voiceText = [speech.transcript, typedNote]
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(". ");
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
@@ -1093,13 +1111,33 @@ function ListingDialog({
                   <p className="min-w-0 flex-1 text-xs leading-5 text-muted-foreground">
                     {speech.listening
                       ? t("ob.story.recording")
-                      : voiceText
-                        ? `“${voiceText}”`
+                      : speech.transcript
+                        ? `“${speech.transcript}”`
                         : speech.supported
                           ? t("ld.voiceHelp")
                           : t("ob.story.unsupported")}
                   </p>
                 </div>
+                {speech.interim && (
+                  <p className="mt-1.5 text-xs italic text-muted-foreground/70">
+                    {speech.interim}…
+                  </p>
+                )}
+                {speech.error &&
+                  speech.error !== "unsupported" &&
+                  !speech.transcript && (
+                    <p className="mt-2 rounded-lg bg-secondary/60 px-2.5 py-1.5 text-[11px] leading-4 text-muted-foreground">
+                      {t("ld.voiceBlocked")}
+                    </p>
+                  )}
+                <Textarea
+                  value={typedNote}
+                  onChange={(e) => setTypedNote(e.target.value)}
+                  placeholder={t("ld.voiceTyped.ph")}
+                  aria-label={t("ld.voiceTyped")}
+                  rows={2}
+                  className="mt-2.5 text-xs"
+                />
               </div>
             </div>
 
@@ -1363,9 +1401,11 @@ function StudioSettings({
 }) {
   const { lang, t } = useI18n();
   const updateMaker = useMutation(api.studio.updateMaker);
+  const photo = usePhoto();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     shopName: maker.shopName,
+    artisanName: maker.artisanName ?? "",
     craft: maker.craft,
     crafts: maker.crafts ?? [maker.craft],
     location: maker.location,
@@ -1373,6 +1413,8 @@ function StudioSettings({
     story: maker.story,
   });
   const makerId = maker._id as Id<"makers">;
+  // A freshly picked photo previews instantly; otherwise show the saved one.
+  const portrait = photo.preview ?? maker.image ?? null;
 
   const toggleCraft = (c: string) =>
     setForm((f) => ({
@@ -1386,13 +1428,15 @@ function StudioSettings({
       await updateMaker({
         makerId,
         shopName: form.shopName,
+        artisanName: form.artisanName,
         craft: form.crafts[0] ?? form.craft,
         crafts: form.crafts,
         location: form.location,
         bio: form.bio,
         story: form.story,
+        imageStorageId: photo.storageId ?? undefined,
       });
-      toast.success(t("stm.editToast"));
+      toast.success(t("stm.saved"));
       onClose();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong.");
@@ -1410,13 +1454,67 @@ function StudioSettings({
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="setShopName">{t("ob.review.shopName")}</Label>
-            <Input
-              id="setShopName"
-              value={form.shopName}
-              onChange={(e) => setForm((f) => ({ ...f, shopName: e.target.value }))}
-            />
+          {/* The artisan's own photo — this is what "Meet the artisan" shows. */}
+          <div className="flex items-center gap-4">
+            {portrait ? (
+              <img
+                src={portrait}
+                alt=""
+                className="size-16 shrink-0 rounded-full border border-border object-cover"
+              />
+            ) : (
+              <span className="flex size-16 shrink-0 items-center justify-center rounded-full bg-primary/10 font-display text-xl font-semibold text-primary">
+                {(form.artisanName || maker.shopName).charAt(0)}
+              </span>
+            )}
+            <div className="min-w-0">
+              <p className="text-sm font-semibold">{t("stm.photo")}</p>
+              <p className="text-xs text-muted-foreground">{t("stm.photo.sub")}</p>
+              <input
+                ref={photo.inputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => photo.pick(e.target.files?.[0])}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-2 rounded-full"
+                disabled={photo.uploading}
+                onClick={() => photo.inputRef.current?.click()}
+              >
+                {photo.uploading ? (
+                  <Loader2 className="mr-1 size-3.5 animate-spin" />
+                ) : (
+                  <Camera className="mr-1 size-3.5" />
+                )}
+                {portrait ? t("stm.photo.change") : t("stm.photo.upload")}
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="setArtisanName">{t("stm.name")}</Label>
+              <Input
+                id="setArtisanName"
+                value={form.artisanName}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, artisanName: e.target.value }))
+                }
+                placeholder={t("stm.name.ph")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="setShopName">{t("ob.review.shopName")}</Label>
+              <Input
+                id="setShopName"
+                value={form.shopName}
+                onChange={(e) => setForm((f) => ({ ...f, shopName: e.target.value }))}
+              />
+            </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
@@ -1576,6 +1674,11 @@ export default function Studio() {
             <h1 className="mt-1.5 font-display text-3xl font-semibold tracking-tight">
               {maker.shopName}
             </h1>
+            {maker.artisanName && (
+              <p className="mt-0.5 text-sm font-medium text-foreground/80">
+                {t("mf.artisan")}: {maker.artisanName}
+              </p>
+            )}
             <p className="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
               <MapPin className="size-3.5" />
               {maker.location} ·

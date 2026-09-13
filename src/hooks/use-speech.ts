@@ -1,20 +1,29 @@
 import { useCallback, useRef, useState } from "react";
 
+type SpeechRecognitionAlternativeLike = { transcript: string };
+
+type SpeechRecognitionResultLike = {
+  isFinal: boolean;
+  length: number;
+  [index: number]: SpeechRecognitionAlternativeLike;
+};
+
+type SpeechRecognitionEventLike = {
+  resultIndex: number;
+  results: ArrayLike<SpeechRecognitionResultLike>;
+};
+
+type SpeechRecognitionErrorLike = { error?: string };
+
 type SpeechRecognitionLike = {
   lang: string;
   interimResults: boolean;
   continuous: boolean;
   onresult: ((event: SpeechRecognitionEventLike) => void) | null;
   onend: (() => void) | null;
-  onerror: (() => void) | null;
+  onerror: ((event: SpeechRecognitionErrorLike) => void) | null;
   start: () => void;
   stop: () => void;
-};
-
-type SpeechRecognitionEventLike = {
-  results: ArrayLike<
-    ArrayLike<{ transcript: string }>
-  >;
 };
 
 function getSpeechRecognition(): (new () => SpeechRecognitionLike) | null {
@@ -26,17 +35,39 @@ function getSpeechRecognition(): (new () => SpeechRecognitionLike) | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-/** Browser voice recognition — used for the artisan "tell your story" flow. */
+/**
+ * Browser voice recognition — used for the artisan "tell your story" flow.
+ *
+ * The transcript is the artisan's own words and feeds directly into listing
+ * generation, so it has to survive real use: recognition runs continuously,
+ * interim words are shown live and flushed as final when the mic stops, and
+ * permission/device failures surface as an `error` the UI can explain instead
+ * of failing silently.
+ */
 export function useSpeechRecognition(lang: string) {
   const supported =
     typeof window !== "undefined" && getSpeechRecognition() !== null;
   const [listening, setListening] = useState(false);
   const [transcript, setTranscript] = useState("");
+  const [interim, setInterim] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const recRef = useRef<SpeechRecognitionLike | null>(null);
+  const finalRef = useRef("");
+  const interimRef = useRef("");
+
+  const append = useCallback((chunk: string) => {
+    finalRef.current = `${finalRef.current} ${chunk}`
+      .replace(/\s+/g, " ")
+      .trim();
+    setTranscript(finalRef.current);
+  }, []);
 
   const start = useCallback(() => {
     const SR = getSpeechRecognition();
-    if (!SR) return;
+    if (!SR) {
+      setError("unsupported");
+      return;
+    }
     try {
       recRef.current?.stop();
     } catch {
@@ -44,22 +75,47 @@ export function useSpeechRecognition(lang: string) {
     }
     const rec = new SR();
     rec.lang = lang === "hi" ? "hi-IN" : "en-IN";
-    rec.interimResults = false;
-    rec.continuous = false;
+    rec.interimResults = true;
+    rec.continuous = true;
     rec.onresult = (event) => {
-      let text = "";
-      for (let i = 0; i < event.results.length; i++) {
-        const alt = event.results[i]?.[0];
-        if (alt) text += alt.transcript + " ";
+      let finished = "";
+      let pending = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        const text = result?.[0]?.transcript ?? "";
+        if (result?.isFinal) finished += `${text} `;
+        else pending += text;
       }
-      setTranscript((prev) => (prev ? `${prev} ${text}` : text).trim());
+      if (finished.trim()) append(finished);
+      interimRef.current = pending.trim();
+      setInterim(interimRef.current);
     };
-    rec.onend = () => setListening(false);
-    rec.onerror = () => setListening(false);
+    rec.onerror = (event) => {
+      const code = event?.error ?? "unknown";
+      // Silence and manual stops are normal — anything else is worth telling
+      // the artisan about so they can allow the mic or type instead.
+      if (code === "no-speech" || code === "aborted") return;
+      setError(code);
+      setListening(false);
+    };
+    rec.onend = () => {
+      // Flush unfinished words so nothing the artisan said is lost.
+      if (interimRef.current) {
+        append(interimRef.current);
+        interimRef.current = "";
+        setInterim("");
+      }
+      setListening(false);
+    };
     recRef.current = rec;
+    setError(null);
     setListening(true);
-    rec.start();
-  }, [lang]);
+    try {
+      rec.start();
+    } catch {
+      setListening(false);
+    }
+  }, [append, lang]);
 
   const stop = useCallback(() => {
     try {
@@ -67,12 +123,30 @@ export function useSpeechRecognition(lang: string) {
     } catch {
       /* ignore */
     }
+    if (interimRef.current) {
+      append(interimRef.current);
+      interimRef.current = "";
+      setInterim("");
+    }
     setListening(false);
-  }, []);
+  }, [append]);
 
   const reset = useCallback(() => {
+    finalRef.current = "";
+    interimRef.current = "";
     setTranscript("");
+    setInterim("");
+    setError(null);
   }, []);
 
-  return { supported, listening, transcript, start, stop, reset };
+  return {
+    supported,
+    listening,
+    transcript,
+    interim,
+    error,
+    start,
+    stop,
+    reset,
+  };
 }
