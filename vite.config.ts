@@ -17,59 +17,46 @@ export default defineConfig({
     dedupe: ["react", "react/jsx-runtime", "react-dom", "react-dom/client"],
   },
   build: {
-    // Enable source maps for better debugging (disable in production if needed)
     sourcemap: false,
-    // Optimize chunk splitting
     rollupOptions: {
       output: {
-        // Manual chunk splitting for better caching and lazy loading
-        manualChunks: {
-          // Vendor chunks for large libraries
-          'react-vendor': ['react', 'react-dom', 'react-router'],
-          'convex-vendor': ['convex'],
-          // Large UI library chunks
-          'radix-ui': [
-            '@radix-ui/react-accordion',
-            '@radix-ui/react-alert-dialog',
-            '@radix-ui/react-avatar',
-            '@radix-ui/react-checkbox',
-            '@radix-ui/react-collapsible',
-            '@radix-ui/react-context-menu',
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-hover-card',
-            '@radix-ui/react-label',
-            '@radix-ui/react-menubar',
-            '@radix-ui/react-navigation-menu',
-            '@radix-ui/react-popover',
-            '@radix-ui/react-progress',
-            '@radix-ui/react-radio-group',
-            '@radix-ui/react-scroll-area',
-            '@radix-ui/react-select',
-            '@radix-ui/react-separator',
-            '@radix-ui/react-slider',
-            '@radix-ui/react-switch',
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-toggle',
-            '@radix-ui/react-toggle-group',
-            '@radix-ui/react-tooltip',
-          ],
-          // Heavy optional libraries - separate chunks for better lazy loading
-          'framer-motion': ['framer-motion'],
-          'charts': ['recharts'],
-          'forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            // --- Stable vendor chunks (change rarely → long cache) ---
+            if (id.includes('/react-dom/') || id.includes('/react/jsx-runtime'))
+              return 'react-vendor';
+            if (id.includes('/react-router') || id.includes('/react-router/'))
+              return 'react-router';
+
+            // --- Convex runtime + auth (separate so index stays lean) ---
+            if (id.includes('/convex/') || id.includes('/@convex-dev/auth/'))
+              return 'convex-vendor';
+
+            // --- Radix primitives ---
+            if (id.includes('/@radix-ui/')) return 'radix-ui';
+
+            // --- Other heavy / rarely-changing libs ---
+            if (id.includes('/framer-motion/')) return 'framer-motion';
+            if (id.includes('/recharts/') || id.includes('/d3-'))
+              return 'charts';
+            if (
+              id.includes('/react-hook-form/') ||
+              id.includes('/@hookform/') ||
+              id.includes('/zod/')
+            )
+              return 'forms';
+            if (id.includes('/date-fns/')) return 'date-fns';
+          }
         },
-        // Optimize chunk size
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]',
       },
     },
-    // Increase chunk size warning limit for better chunking
-    chunkSizeWarningLimit: 1000,
-    // Target modern browsers for better optimization
+    // 200 KB minified (~60 KB gzip) — covers the Convex runtime + React
+    // vendor chunks; anything larger is almost certainly a split candidate.
+    chunkSizeWarningLimit: 200,
     target: 'esnext',
-    // Minify options - using esbuild (faster than terser)
     minify: 'esbuild',
   },
   // Optimize dependencies
