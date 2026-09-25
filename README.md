@@ -59,9 +59,14 @@ A warm, traditional Indian craft aesthetic — terracotta, indigo, and turmeric 
 
 Vercel hosts the built frontend; the Convex deployment behind it provides the
 database and functions. `vercel.json` is already configured (static `bun run
-build`, SPA rewrites, immutable asset caching), and the Convex types under
-`src/convex/_generated` are committed so a fresh clone typechecks and builds
-without the Convex CLI.
+build`, SPA rewrites, immutable asset caching).
+
+`src/convex/_generated` is gitignored and the Convex CLI needs deploy
+credentials to recreate it, so a verbatim snapshot of that output is committed
+at `scripts/convex-bindings/` and restored automatically by the first step of
+`bun run build`. Local development is unaffected — `npx convex dev` still writes
+live bindings. After adding or removing a Convex function, refresh the snapshot
+(see [DEPLOYMENT.md](./DEPLOYMENT.md)).
 
 The full walkthrough lives in [**DEPLOYMENT.md**](./DEPLOYMENT.md). The short
 version:
@@ -69,7 +74,7 @@ version:
 1. Import the repo into Vercel (framework preset: Vite).
 2. Add `VITE_CONVEX_URL` (the deployment's `https://<deployment>.convex.cloud`
    URL) to the Vercel project's environment variables.
-3. Deploy.
+3. Deploy. No Convex credentials are needed — the build is fully static.
 
 ## Team
 

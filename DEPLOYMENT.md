@@ -23,13 +23,35 @@ vercel.json
                                                 are still served directly)
 ```
 
-## Why `tsc -b` works without the Convex CLI
+## How the build gets the Convex bindings
 
-`tsc -b` typechecks `src/convex/`, which imports `./_generated/server`. Those
-files are **committed to the repository** (see the note in `.gitignore`) because
-the Convex CLI can only regenerate them with deploy credentials. `_generated/api.js`
-is built on `anyApi`, so it stays correct as functions are added — regenerate it
-locally with `npx convex dev` whenever you want fresh types.
+The app needs `src/convex/_generated` in two places: `tsc -b` typechecks every
+file under `src/convex/` (they import `./_generated/server`), and the client
+imports `@/convex/_generated/api` at runtime. That folder is gitignored, and the
+Convex CLI can only regenerate it **with deploy credentials** — which a Vercel
+build doesn't have. Without it the build dies with 300-odd errors of the form
+`Cannot find module './_generated/server'` and `Parameter 'q' implicitly has an
+'any' type`.
+
+So a verbatim copy of `convex codegen` output is committed at
+`scripts/convex-bindings/`, and the first step of `bun run build` restores it
+when it's missing:
+
+```
+build = bun scripts/ensure-convex-bindings.ts && tsc -b && vite build
+```
+
+The script never overwrites an existing folder, so local development is
+unaffected — `npx convex dev` keeps writing live bindings straight to
+`src/convex/_generated` and the script no-ops.
+
+**Refresh the snapshot whenever you add or remove a Convex function** (the
+`.d.ts` files enumerate your modules):
+
+```bash
+mkdir -p scripts/convex-bindings
+cp src/convex/_generated/*.js src/convex/_generated/*.d.ts scripts/convex-bindings/
+```
 
 ---
 
@@ -106,7 +128,8 @@ Deploy from the Vercel dashboard or push to the production branch. The build run
 
 | Symptom | Cause / fix |
 | --- | --- |
-| Build fails: `Cannot find module './_generated/server'` | `src/convex/_generated/` was not committed. Confirm the four `.d.ts`/`.js` pairs are present in the repo, or regenerate with `npx convex dev`. |
+| Build fails: `Cannot find module './_generated/server'` | The `scripts/convex-bindings/` snapshot is missing from the checkout. Confirm those five files are present and that `build` still starts with `bun scripts/ensure-convex-bindings.ts`. |
+| Build fails: `Parameter 'q' implicitly has an 'any' type` | Same cause — the bindings folder is absent, so the Convex query builders lose their generics. Fix the snapshot, not the call sites. |
 | Build succeeds but the page is blank | `VITE_CONVEX_URL` was missing at build time. Add it in Vercel and redeploy (a redeploy, not just a restart, is required). |
 | Console error: `Could not find Convex client` / auth requests fail | Same cause as above — the URL is not baked into the bundle. |
 | Deep links like `/product/abc` 404 | The SPA rewrite is missing; confirm `vercel.json` is committed at the repo root. |
