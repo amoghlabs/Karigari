@@ -1,129 +1,132 @@
 # Deploying कारीgari to Vercel
 
-The frontend is a Vite SPA and the backend is Convex, so a deployment has two
-halves: the **Vercel project** (static build) and the **Convex production
-deployment** (database + functions). `vercel.json` is already configured for
-this — the only things you provide are environment variables and a deploy key.
+कारीgari is a Vite SPA backed by Convex, so a deployment has two halves that are
+provisioned separately:
+
+| Half | What it is | Where it lives |
+| --- | --- | --- |
+| Frontend | Static `dist/` build of the SPA | Vercel |
+| Backend | Convex functions + database | Convex deployment `wonderful-cuttlefish-103` (already running) |
+
+Vercel serves the built frontend; the frontend talks to the existing Convex
+deployment over `VITE_CONVEX_URL`. **No Convex credentials are needed in Vercel**
+— the build is a plain static build.
 
 ```
 vercel.json
+  framework        vite
   installCommand   bun install
-  buildCommand     npx convex deploy --cmd 'bun run build'
+  buildCommand     bun run build          (tsc -b && vite build)
   outputDirectory  dist
-  rewrites         all non-asset routes -> /index.html   (SPA routing)
+  rewrites         all routes -> /index.html   (SPA routing, applied after the
+                                                filesystem check so real assets
+                                                are still served directly)
 ```
 
-`npx convex deploy` pushes `src/convex/` to production **and** regenerates
-`src/convex/_generated`, which the build needs. That directory is gitignored, so
-without this step `tsc -b` fails on a fresh clone with `Cannot find module
-'./_generated/server'`.
+## Why `tsc -b` works without the Convex CLI
+
+`tsc -b` typechecks `src/convex/`, which imports `./_generated/server`. Those
+files are **committed to the repository** (see the note in `.gitignore`) because
+the Convex CLI can only regenerate them with deploy credentials. `_generated/api.js`
+is built on `anyApi`, so it stays correct as functions are added — regenerate it
+locally with `npx convex dev` whenever you want fresh types.
 
 ---
 
 ## 1. Create the Vercel project
 
-1. Push this repository to GitHub/GitLab.
-2. In the Vercel dashboard: **Add New → Project → Import** the repo.
-3. Framework preset: **Vite** (already pinned in `vercel.json`). Leave Build
-   Command / Output Directory as-is — `vercel.json` overrides them.
+1. Push this repository to GitHub / GitLab.
+2. Vercel dashboard → **Add New → Project** → import the repo.
+3. Framework preset: **Vite**. Leave Build Command, Output Directory and Install
+   Command at their defaults — `vercel.json` overrides them.
 
-## 2. Set Vercel environment variables
+## 2. Add the environment variables Vercel needs
 
-Project → **Settings → Environment Variables**. Add these for **Production**
-(and Preview if you want preview deploys to work):
+Project → **Settings → Environment Variables**. Add for **Production** (and
+Preview if you want preview deploys to work):
 
 | Variable | Value |
 | --- | --- |
-| `CONVEX_DEPLOY_KEY` | Production deploy key from the Convex dashboard (see step 3) |
-| `VITE_CONVEX_URL` | `https://<your-deployment>.convex.cloud` — the **production** deployment URL |
+| `VITE_CONVEX_URL` | `https://wonderful-cuttlefish-103.convex.cloud` |
 
-`VITE_CONVEX_URL` is baked into the client bundle at build time, so it must be
-present before the first build, and a change requires a redeploy.
+That is the only variable the app requires. Vite inlines `VITE_*` variables at
+build time, so it must be present **before** the first build, and changing it
+requires a redeploy.
 
-## 3. Get the Convex deploy key
+Optional, and both are read only by the Freebuff error overlay
+(`src/instrumentation.tsx`, currently not mounted) — safe to omit on Vercel:
 
-Convex dashboard → your project → **Settings → Deploy Keys → Generate Production
-Deploy Key**. Paste the value into `CONVEX_DEPLOY_KEY` in Vercel.
+| Variable | Value |
+| --- | --- |
+| `VITE_VLY_APP_ID` | `tasty-gifts-mate` |
+| `VITE_VLY_MONITORING_URL` | `https://harmless-tapir-303.convex.site/runtime-error` |
 
-This key both pushes functions and generates types during the Vercel build.
+## 3. Backend variables — already configured, no action needed
 
-## 4. Set the Convex-side environment variables
-
-These live on the Convex **production** deployment, not in Vercel. Set them from
-a machine with this repo checked out:
-
-```bash
-# Authenticate the CLI and target the production deployment
-npx convex login
-npx convex env set --prod SITE_URL https://<your-app>.vercel.app
-```
-
-Then the auth keys required by Convex Auth (`src/convex/auth.ts`,
-`src/convex/auth.config.ts` — do not edit those files):
+These live on the Convex deployment, not in Vercel, and are managed under
+**API Keys → Backend**. They are already set correctly; do not re-create or
+change them:
 
 | Variable | Purpose |
 | --- | --- |
-| `SITE_URL` | Public origin of the deployed site. Must match the Vercel URL exactly (no trailing slash) or auth redirects break. Add the custom domain here too if you attach one. |
-| `JWKS` | Public JWKS for signing/verifying auth tokens |
-| `JWT_PRIVATE_KEY` | Private key for signing auth tokens |
+| `SITE_URL` | `https://wonderful-cuttlefish-103.convex.site` — used by Convex Auth for the auth HTTP routes |
+| `JWKS`, `JWT_PRIVATE_KEY` | Auth token signing keys (managed, secret) |
+| `VLY_CONVEX_AUTH_ISSUER`, `VLY_APP_NAME`, `VLY_INTEGRATION_*` | Freebuff/Vly platform wiring |
 
-Generate the key pair with the Convex Auth CLI (`npx @convex-dev/auth --prod`) or
-copy the pair already generated for your dev deployment and set it on prod:
-
-```bash
-npx convex env set --prod JWKS '<json-jwks>'
-npx convex env set --prod JWT_PRIVATE_KEY '<private-key>'
-```
-
-Optional features — the app degrades gracefully when these are absent, but the
-matching feature is disabled:
+Optional feature keys — the app degrades gracefully without them, using
+deterministic fallbacks instead:
 
 | Variable | Enables |
 | --- | --- |
-| `OPENAI_API_KEY` | AI description / translation / cultural-story and pricing reasoning (`src/convex/aiStory.ts`). Without it the deterministic fallbacks are used. |
-| `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` | Real Razorpay checkout. Without them the demo checkout path is used. |
-| `VLY_INTEGRATION_KEY` | Only when running the app on Vly/Freebuff-hosted integrations. Not needed on Vercel. |
+| `OPENAI_API_KEY` | AI product descriptions, translations, cultural stories and pricing reasoning (`src/convex/aiStory.ts`). Without it the built-in heuristic writers are used, so **Sell with AI stays functional either way**. |
+| `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` | Live Razorpay checkout instead of the demo checkout path. |
 
-List what is currently set with:
+If sign-in ever fails to complete on the deployed origin, update `SITE_URL` to
+the deployed URL (no trailing slash) under **API Keys → Backend** — that is the
+one value tied to where the frontend is served from.
 
-```bash
-npx convex env list --prod
-```
+## 4. Deploy
 
-## 5. Deploy
-
-Trigger a deploy from the Vercel dashboard or push to the production branch.
-
-The build runs:
+Deploy from the Vercel dashboard or push to the production branch. The build runs:
 
 1. `bun install`
-2. `npx convex deploy` → pushes `src/convex/`, regenerates `_generated`
-3. `bun run build` → `tsc -b && vite build`
-4. Vercel serves `dist/` with SPA fallback from `vercel.json`
+2. `bun run build` → `tsc -b && vite build`
+3. Vercel serves `dist/` with the SPA fallback from `vercel.json`
 
-## 6. Verify
+## 5. Verify
 
-- `/` renders the landing page (not a 404) — confirms the SPA rewrite.
-- Open `/shop`, then hard-refresh: the route must still resolve, not 404.
-- Sign in through `/auth`, then confirm the dashboard loads — this proves
-  `VITE_CONVEX_URL` and `SITE_URL` are correct.
-- Place a test order — this proves the Convex functions were pushed.
+- `/` renders the landing page — confirms the SPA rewrite is active.
+- Open `/shop`, then hard-refresh. The route must resolve rather than 404.
+- Sign in via `/auth` and confirm the dashboard loads — this proves
+  `VITE_CONVEX_URL` points at a live Convex deployment.
+- Place a test order, then check **Track Orders** — this proves the backend
+  functions are reachable from the deployed origin.
 
 ## Troubleshooting
 
 | Symptom | Cause / fix |
 | --- | --- |
-| Build fails with `Cannot find module './_generated/server'` | `CONVEX_DEPLOY_KEY` is missing, so `npx convex deploy` didn't run/regenerate. Add it and redeploy. |
-| Build fails with `No CONVEX_DEPLOY_KEY found` / auth error | The key is expired or was added to the wrong environment (e.g. Preview only). |
-| Deployed app shows a blank page or "Could not find Convex client" | `VITE_CONVEX_URL` is missing or still points at the dev deployment. Set it and redeploy so it is re-baked into the bundle. |
-| Sign-in loops back to `/auth` | `SITE_URL` on the Convex deployment does not match the deployed origin. Update it with `npx convex env set --prod SITE_URL ...`. |
-| Data from the sandbox/dev deployment is missing | Expected: production Convex is a separate database. Re-seed if needed (`src/convex/seed.ts`). |
+| Build fails: `Cannot find module './_generated/server'` | `src/convex/_generated/` was not committed. Confirm the four `.d.ts`/`.js` pairs are present in the repo, or regenerate with `npx convex dev`. |
+| Build succeeds but the page is blank | `VITE_CONVEX_URL` was missing at build time. Add it in Vercel and redeploy (a redeploy, not just a restart, is required). |
+| Console error: `Could not find Convex client` / auth requests fail | Same cause as above — the URL is not baked into the bundle. |
+| Deep links like `/product/abc` 404 | The SPA rewrite is missing; confirm `vercel.json` is committed at the repo root. |
+| Sign-in doesn't complete after redirect | `SITE_URL` on the Convex deployment doesn't match the deployed origin. Update it under **API Keys → Backend**. |
+| Data looks like the sandbox's data | Expected: the deployed frontend shares the same Convex deployment as the Freebuff sandbox. See below to separate them. |
 
-## Notes
+## Optional: give production its own Convex deployment
 
-- Vercel's build image supports Bun, and `installCommand: "bun install"` plus the
-  committed `bun.lock` pin the install.
-- Do not change `vite.config.ts` HMR settings in the Freebuff preview
-  environment; `server.hmr` is intentionally left as configured.
-- `convex.json` (`"functions": "src/convex/"`) is what tells the Convex CLI where
-  the backend lives — keep it in sync if the folder ever moves.
+The Vercel site currently shares the sandbox's Convex deployment, which is fine
+for a demo but means demo data is shared with production. To separate them:
+
+1. Create a production deployment in the Convex dashboard and copy its
+   `https://<deployment>.convex.cloud` URL.
+2. In Vercel, set `VITE_CONVEX_URL` to that URL and add `CONVEX_DEPLOY_KEY`
+   (Convex dashboard → **Settings → Deploy Keys → Production**).
+3. Change `buildCommand` in `vercel.json` to push functions as part of the build:
+
+   ```json
+   "buildCommand": "npx convex deploy --cmd 'bun run build'"
+   ```
+
+4. Re-create the backend variables from step 3 on the production deployment
+   (`npx convex env set --prod SITE_URL ...`, plus the auth keys), then redeploy.

@@ -57,17 +57,19 @@ A warm, traditional Indian craft aesthetic — terracotta, indigo, and turmeric 
 
 ## Deployment
 
-Deploys to Vercel with Convex as the backend — `vercel.json` is already wired up
-(`npx convex deploy --cmd 'bun run build'`, SPA rewrites, asset caching).
+Vercel hosts the built frontend; the Convex deployment behind it provides the
+database and functions. `vercel.json` is already configured (static `bun run
+build`, SPA rewrites, immutable asset caching), and the Convex types under
+`src/convex/_generated` are committed so a fresh clone typechecks and builds
+without the Convex CLI.
 
-The full walkthrough, including every environment variable, lives in
-[**DEPLOYMENT.md**](./DEPLOYMENT.md). The short version:
+The full walkthrough lives in [**DEPLOYMENT.md**](./DEPLOYMENT.md). The short
+version:
 
 1. Import the repo into Vercel (framework preset: Vite).
-2. Set `CONVEX_DEPLOY_KEY` and `VITE_CONVEX_URL` in the Vercel project.
-3. Set `SITE_URL`, `JWKS`, and `JWT_PRIVATE_KEY` on the Convex production
-   deployment with `npx convex env set --prod`.
-4. Deploy.
+2. Add `VITE_CONVEX_URL` (the deployment's `https://<deployment>.convex.cloud`
+   URL) to the Vercel project's environment variables.
+3. Deploy.
 
 ## Team
 
