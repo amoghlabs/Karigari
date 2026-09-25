@@ -33,7 +33,7 @@ Talented artisans across India create beautiful, culturally rich handmade work �
 
 ## Key Features
 
-- Phone + OTP login (via 2Factor.in) — no passwords, minimal typing, built for users with little to no tech background
+- Phone + OTP login — no passwords, minimal typing, built for users with little to no tech background. One phone number always resolves to one account, so returning artisans keep their studio and returning buyers keep their order history
 - Smart Cataloguing — AI extracts product attributes (name, category, materials, colors, dimensions, tags) straight from a photo
 - Voice-to-structured-story — regional-language voice input becomes a polished, structured listing
 - AI Pricing Manager — factors in photo quality, material cost, and past sales, and explains its reasoning
@@ -43,8 +43,8 @@ Talented artisans across India create beautiful, culturally rich handmade work �
 ## Tech Stack
 
 - **Backend:** Convex (real-time database + serverless functions)
-- **OTP/SMS:** 2Factor.in
-- **Payments:** _add provider once finalized_
+- **Payments:** Razorpay (demo checkout fallback when keys are absent)
+- **Deployment:** Vercel (static frontend) + Convex production deployment
 - Built and iterated on using [FreeBuff](https://freebuff.dev)
 
 ## Design
@@ -55,16 +55,39 @@ A warm, traditional Indian craft aesthetic — terracotta, indigo, and turmeric 
 
 [tasty-gifts-mate.freebuff.dev](https://tasty-gifts-mate.freebuff.dev)
 
+## Deployment
+
+Deploys to Vercel with Convex as the backend — `vercel.json` is already wired up
+(`npx convex deploy --cmd 'bun run build'`, SPA rewrites, asset caching).
+
+The full walkthrough, including every environment variable, lives in
+[**DEPLOYMENT.md**](./DEPLOYMENT.md). The short version:
+
+1. Import the repo into Vercel (framework preset: Vite).
+2. Set `CONVEX_DEPLOY_KEY` and `VITE_CONVEX_URL` in the Vercel project.
+3. Set `SITE_URL`, `JWKS`, and `JWT_PRIVATE_KEY` on the Convex production
+   deployment with `npx convex env set --prod`.
+4. Deploy.
+
 ## Team
 
 Built by a 6-person team from JSS University (B.Tech CSE, AI/ML).
 
 ## Getting Started
 
-The app is built and hosted on FreeBuff. To pull the source locally:
-1. Open the project on FreeBuff and use the **Code** button to get a browser-based VS Code environment.
-2. Download the project folders as a zip from there.
-3. Set up your own Convex deployment and environment variables (`TWOFACTOR_API_KEY`, etc.) to run it outside FreeBuff.
+```bash
+bun install
+bunx convex dev        # starts the Convex dev deployment and generates src/convex/_generated
+bun run dev            # Vite dev server
+```
+
+`VITE_CONVEX_URL` is injected for you in the hosted FreeBuff environment. To run
+outside it, point that variable at your own Convex deployment and set the
+backend variables described in [DEPLOYMENT.md](./DEPLOYMENT.md).
+
+Optional backend keys, each of which enables a feature and falls back cleanly
+when absent: `OPENAI_API_KEY` (AI writing, translation and pricing reasoning),
+`RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` (live checkout).
 
 ---
 
