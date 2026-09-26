@@ -61,12 +61,13 @@ Vercel hosts the built frontend; the Convex deployment behind it provides the
 database and functions. `vercel.json` is already configured (static `bun run
 build`, SPA rewrites, immutable asset caching).
 
-`src/convex/_generated` is gitignored and the Convex CLI needs deploy
-credentials to recreate it, so a verbatim snapshot of that output is committed
-at `scripts/convex-bindings/` and restored automatically by the first step of
-`bun run build`. Local development is unaffected — `npx convex dev` still writes
+`src/convex/_generated` is produced by the Convex CLI, which needs deploy
+credentials a static host doesn't have. It is therefore tracked in git, with a
+verbatim snapshot of the same output committed at `src/deploy/convex-bindings/`
+that `src/deploy/restore-convex-bindings.mjs` restores on `postinstall` and
+before `tsc -b`. Local development is unaffected — `npx convex dev` still writes
 live bindings. After adding or removing a Convex function, refresh the snapshot
-(see [DEPLOYMENT.md](./DEPLOYMENT.md)).
+with `bun run convex:bindings:snapshot` (see [DEPLOYMENT.md](./DEPLOYMENT.md)).
 
 The full walkthrough lives in [**DEPLOYMENT.md**](./DEPLOYMENT.md). The short
 version:

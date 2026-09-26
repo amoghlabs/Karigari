@@ -28,5 +28,9 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "vly-toolbar-readonly.tsx"]
+  "include": ["src", "vly-toolbar-readonly.tsx"],
+  /* `src/deploy` holds the Convex bindings snapshot, whose `api.d.ts` uses paths
+     like `../accounts.js` that only resolve from inside `src/convex/`. It is
+     copied into place at build time, so it is not typechecked where it sits. */
+  "exclude": ["src/deploy"]
 }

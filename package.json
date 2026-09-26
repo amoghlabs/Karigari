@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "bun scripts/ensure-convex-bindings.ts && tsc -b && vite build",
+    "postinstall": "node src/deploy/restore-convex-bindings.mjs || true",
+    "build": "node src/deploy/restore-convex-bindings.mjs || true && tsc -b && vite build",
+    "convex:bindings:snapshot": "bunx convex codegen && node src/deploy/restore-convex-bindings.mjs --snapshot",
     "lint": "eslint .",
     "format": "prettier --write .",
     "preview": "vite preview"
