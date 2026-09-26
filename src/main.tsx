@@ -88,7 +88,41 @@ class RootErrorBoundary extends React.Component<
   }
 }
 
-const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
+/** Shown instead of the app when the build had no `VITE_CONVEX_URL`. */
+function MissingConvexUrl() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background text-foreground p-6">
+      <div className="w-full max-w-lg rounded-lg border border-border/60 p-6 text-center">
+        <p className="text-sm font-semibold tracking-tight">
+          Backend not configured
+        </p>
+        <p className="mt-2 text-xs text-muted-foreground">
+          This build is missing{" "}
+          <code className="rounded bg-muted px-1 py-0.5">VITE_CONVEX_URL</code>.
+          Vite inlines it at build time, so it has to be set in the host&apos;s
+          environment variables before the build runs — changing it needs a
+          redeploy.
+        </p>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Set it to the Convex deployment URL, for example{" "}
+          <code className="rounded bg-muted px-1 py-0.5">
+            https://your-deployment.convex.cloud
+          </code>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Vite inlines `VITE_*` values at build time, so a host build that was missing
+ * `VITE_CONVEX_URL` produces a bundle where this is `undefined`.
+ * `ConvexReactClient` throws on an undefined address, and this line runs at
+ * module scope — outside `RootErrorBoundary` — so it used to leave a deployed
+ * site as a blank page with a single console error and no visible clue.
+ */
+const convexUrl = import.meta.env.VITE_CONVEX_URL as string | undefined;
+const convex = convexUrl ? new ConvexReactClient(convexUrl) : null;
 
 
 
@@ -122,7 +156,8 @@ createRoot(document.getElementById("root")!).render(
       <ToolbarErrorBoundary>
         <VlyToolbar />
       </ToolbarErrorBoundary>
-      <ConvexAuthProvider client={convex}>
+      {convex ? (
+        <ConvexAuthProvider client={convex}>
         <I18nProvider>
           <BrowserRouter>
             <RouteSyncer />
@@ -182,7 +217,10 @@ createRoot(document.getElementById("root")!).render(
           </BrowserRouter>
           <Toaster />
         </I18nProvider>
-      </ConvexAuthProvider>
+        </ConvexAuthProvider>
+      ) : (
+        <MissingConvexUrl />
+      )}
     </RootErrorBoundary>
   </StrictMode>,
 );

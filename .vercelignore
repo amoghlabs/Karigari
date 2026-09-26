@@ -4,3 +4,10 @@ dist
 .git
 *.log
 .env.local
+
+# Transient platform artifact (~11 MB). Not part of the app or the build.
+freebuff-data-transfer-*.zip
+
+# A stale copy of a previous `dist/` build that got committed at the repo root.
+# Vite never reads it; keeping it out of the upload keeps deploys lean.
+isolate

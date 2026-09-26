@@ -216,6 +216,26 @@ describe("static-host configuration", () => {
   });
 });
 
+describe("missing VITE_CONVEX_URL cannot blank the deployed site", () => {
+  // `new ConvexReactClient(undefined)` throws at module scope, i.e. before
+  // `createRoot` and outside `RootErrorBoundary`, so the only symptom used to be
+  // a white page and one console error. A host build missing the variable is the
+  // most likely production misconfiguration there is, so it gets a guard.
+  const mainSource = readFileSync(join(repoRoot, "src", "main.tsx"), "utf8");
+
+  test("the client is only constructed for a defined URL", () => {
+    expect(mainSource).not.toMatch(
+      /new ConvexReactClient\(\s*import\.meta\.env\.VITE_CONVEX_URL/,
+    );
+    expect(mainSource).toMatch(/convexUrl \?\s*new ConvexReactClient/);
+  });
+
+  test("a visible fallback replaces the app instead of a blank page", () => {
+    expect(mainSource).toContain("MissingConvexUrl");
+    expect(mainSource).toContain("VITE_CONVEX_URL");
+  });
+});
+
 describe("committed bindings stay in sync", () => {
   const generatedDir = join(repoRoot, "src", "convex", "_generated");
   const snapshotDir = join(deployDir, snapshotDirName);
