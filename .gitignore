@@ -11,7 +11,12 @@
 # restores it on `postinstall` and before `tsc -b` if the folder is ever absent.
 # Refresh both after adding or removing a Convex function:
 #   bun run convex:bindings:snapshot
-src/convex/_generated
+#
+# Deliberately NOT listed below — re-adding an ignore rule for it is what broke
+# the Vercel build before: gitignore does not untrack the files, but a checkout
+# that lacks them can no longer rebuild them.
+#
+# src/convex/_generated
 
 .env.local
 node_modules
