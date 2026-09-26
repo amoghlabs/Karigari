@@ -1,0 +1,1 @@
+const o=["Pottery & Terracotta","Handloom Textiles","Block Printing","Jewelry","Woodwork","Metalwork","Bamboo & Cane"],e={"Pottery & Terracotta":"🏺","Handloom Textiles":"🧶","Block Printing":"🖨️",Jewelry:"💍",Woodwork:"🪵",Metalwork:"🔔","Bamboo & Cane":"🧺"};export{e as C,o as P};
