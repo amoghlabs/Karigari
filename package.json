@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite",
     "postinstall": "node src/deploy/restore-convex-bindings.mjs || true",
-    "build": "node src/deploy/restore-convex-bindings.mjs || true && tsc -b && vite build",
+    "build": "node src/deploy/restore-convex-bindings.mjs || true && tsc -b && vite build && node src/deploy/check-chunk-cycles.mjs",
     "convex:bindings:snapshot": "bunx convex codegen && node src/deploy/restore-convex-bindings.mjs --snapshot",
+    "chunks:check": "node src/deploy/check-chunk-cycles.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
     "preview": "vite preview"

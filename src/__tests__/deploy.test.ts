@@ -259,3 +259,127 @@ describe("committed bindings stay in sync", () => {
     }
   });
 });
+
+/**
+ * Circular chunk imports are invisible in dev and fatal in production: ESM runs
+ * one chunk's body while the other is still paused at its own import, so `var`
+ * initializers have not run and any lazy CommonJS init touching them throws.
+ * That is how https://karigari.freebuff.app/ shipped a blank page with
+ * "Cannot set properties of undefined (setting 'Activity')". The guard runs at
+ * the end of `bun run build`; here it is exercised against fixtures, the same
+ * way the bindings restore script is tested above.
+ */
+describe("check-chunk-cycles.mjs", () => {
+  const script = join(deployDir, "check-chunk-cycles.mjs");
+
+  function makeChunks(files: Record<string, string>): string {
+    const dir = mkdtempSync(join(tmpdir(), "chunk-cycles-"));
+    for (const [name, source] of Object.entries(files)) {
+      writeFileSync(join(dir, name), source);
+    }
+    return dir;
+  }
+
+  const runIn = (dir: string) =>
+    spawnSync("node", [script, "--dir", dir], { encoding: "utf8" });
+
+  test("accepts an acyclic graph", () => {
+    const dir = makeChunks({
+      "entry.js": 'import"./vendor.js";import"./route.js";',
+      "vendor.js": 'export const a = 1;',
+      "route.js": 'import"./vendor.js";export const b = 2;',
+    });
+    try {
+      const result = runIn(dir);
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("no cycles");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects the two-chunk cycle that blanked production", () => {
+    const dir = makeChunks({
+      "entry.js": 'import"./react-vendor.js";',
+      "react-vendor.js": 'import{r}from"./convex-vendor.js";export{};',
+      "convex-vendor.js": 'import{r}from"./react-vendor.js";export{};',
+    });
+    try {
+      const result = runIn(dir);
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("circular chunk import");
+      expect(result.stderr).toContain("vite.config.ts");
+      // Either traversal direction is a valid rendering of this cycle.
+      expect(result.stderr).toMatch(
+        /react-vendor\.js -> convex-vendor\.js -> react-vendor\.js|convex-vendor\.js -> react-vendor\.js -> convex-vendor\.js/,
+      );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects a three-chunk cycle", () => {
+    const dir = makeChunks({
+      "a.js": 'import"./b.js";export{};',
+      "b.js": 'import"./c.js";export{};',
+      "c.js": 'import"./a.js";export{};',
+    });
+    try {
+      const result = runIn(dir);
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("a.js -> b.js -> c.js -> a.js");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("ignores dynamic import(), which only runs after startup", () => {
+    const dir = makeChunks({
+      "a.js": 'export const go = () => import("./b.js");',
+      "b.js": 'export const back = () => import("./a.js");',
+    });
+    try {
+      expect(runIn(dir).status).toBe(0);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("fails loudly when the output directory is missing", () => {
+    const result = spawnSync("node", [script, "--dir", "no-such-dir"], {
+      encoding: "utf8",
+    });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("No output directory");
+  });
+});
+
+/**
+ * Regression assertions on the chunk rules themselves. The original bug was a
+ * substring match: `id.includes('/react-dom/')` also matches
+ * '@floating-ui/react-dom', which pulled a React *consumer* into the React
+ * vendor chunk while React's CommonJS exports object sat in the Convex chunk.
+ */
+describe("vite.config.ts chunk rules", () => {
+  const viteConfig = readFileSync(join(repoRoot, "vite.config.ts"), "utf8");
+
+  test("package rules are anchored on node_modules/, not bare substrings", () => {
+    expect(viteConfig).not.toMatch(/id\.includes\('\/react-dom\/\'\)/);
+    expect(viteConfig).toContain("pkg('react-dom')");
+    expect(viteConfig).toContain("/node_modules/${name}/");
+  });
+
+  test("React and Convex share one chunk so the graph cannot go circular", () => {
+    expect(viteConfig).toContain("core-vendor");
+    expect(viteConfig).not.toContain("convex-vendor");
+    expect(viteConfig).not.toContain("'react-vendor'");
+  });
+
+  test("the cycle guard is wired into the build", () => {
+    const pkg = JSON.parse(
+      readFileSync(join(repoRoot, "package.json"), "utf8"),
+    ) as { scripts: Record<string, string> };
+    expect(pkg.scripts.build).toContain("check-chunk-cycles.mjs");
+    expect(pkg.scripts["chunks:check"]).toContain("check-chunk-cycles.mjs");
+  });
+});

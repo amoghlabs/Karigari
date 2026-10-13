@@ -21,41 +21,50 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes('node_modules')) {
-            // --- Stable vendor chunks (change rarely → long cache) ---
-            if (id.includes('/react-dom/') || id.includes('/react/jsx-runtime'))
-              return 'react-vendor';
-            if (id.includes('/react-router') || id.includes('/react-router/'))
-              return 'react-router';
+          if (!id.includes('node_modules')) return;
 
-            // --- Convex runtime + auth (separate so index stays lean) ---
-            if (id.includes('/convex/') || id.includes('/@convex-dev/auth/'))
-              return 'convex-vendor';
+          // Match whole package directories, anchored on `node_modules/`.
+          // A bare substring like '/react-dom/' also matches
+          // '@floating-ui/react-dom', which is what pulled a React *consumer*
+          // into the React vendor chunk and split React's CommonJS exports
+          // object across two chunks. Those two chunks then imported each
+          // other, re-entering a module body before its `var` initializers
+          // had run — the deployed blank page with
+          // "Cannot set properties of undefined (setting 'Activity')".
+          const pkg = (name: string) => id.includes(`/node_modules/${name}/`);
 
-            // --- Radix primitives ---
-            if (id.includes('/@radix-ui/')) return 'radix-ui';
+          // --- Core vendor chunk (changes rarely → long cache) ---
+          // React and Convex are mutually coupled through React's CommonJS
+          // namespace object, so they MUST share one chunk. Splitting any two
+          // mutually-dependent packages into different chunks is what makes
+          // the emitted graph circular.
+          if (
+            pkg('react') ||
+            pkg('react-dom') ||
+            pkg('convex') ||
+            pkg('@convex-dev/auth')
+          )
+            return 'core-vendor';
 
-            // --- Other heavy / rarely-changing libs ---
-            if (id.includes('/framer-motion/')) return 'framer-motion';
-            if (id.includes('/recharts/') || id.includes('/d3-'))
-              return 'charts';
-            if (
-              id.includes('/react-hook-form/') ||
-              id.includes('/@hookform/') ||
-              id.includes('/zod/')
-            )
-              return 'forms';
-            if (id.includes('/date-fns/')) return 'date-fns';
-          }
+          // --- One-way consumers of core-vendor: safe to split out ---
+          if (pkg('react-router')) return 'react-router';
+          if (pkg('@radix-ui')) return 'radix-ui';
+          if (pkg('framer-motion')) return 'framer-motion';
+          if (pkg('recharts') || id.includes('/node_modules/d3-'))
+            return 'charts';
+          if (pkg('react-hook-form') || pkg('@hookform') || pkg('zod'))
+            return 'forms';
+          if (pkg('date-fns')) return 'date-fns';
         },
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]',
       },
     },
-    // 200 KB minified (~60 KB gzip) — covers the Convex runtime + React
-    // vendor chunks; anything larger is almost certainly a split candidate.
-    chunkSizeWarningLimit: 200,
+    // ~280 KB minified (~85 KB gzip) — one chunk holding React, react-dom and
+    // the Convex client, which have to ship together. Anything well past this
+    // is almost certainly a split candidate.
+    chunkSizeWarningLimit: 300,
     target: 'esnext',
     minify: 'esbuild',
   },
